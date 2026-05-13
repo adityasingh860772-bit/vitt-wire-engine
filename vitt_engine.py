@@ -9,11 +9,10 @@ import time
 # ==========================================
 
 # 1. PERMANENT IDENTITY LINK
-# Verified asset link from the v1.0.0 public release
 my_lora_url = "https://github.com/adityasingh860772-bit/vitt-wire-engine/releases/download/v1.0.0/T2Z3k6pzmg9oY6UFynuqx_pytorch_lora_weights.safetensors"
 
 # 2. BRAND STYLE LOCK 
-# Fixed hair volume fix: High-priority anchors + 1.15 Scale
+# Surgical hair volume fix: High-priority anchors + 1.15 Scale
 hair_style = "highly voluminous, thick professional textured hair with significant height and sharp styling"
 anchor_studio = "a premium, minimalist modern glass office in Mumbai with a clean white desk and a soft-focus city skyline"
 
@@ -22,13 +21,11 @@ prompt = f"Professional studio portrait of AdityaSinghAI with {hair_style}. He i
 
 # 4. AUTO-RETRY PRODUCTION ENGINE
 def generate_broadcast_image():
-    # Verification of Credentials
     fal_key = os.getenv("FAL_KEY")
     if not fal_key:
         print("CRITICAL ERROR: FAL_KEY missing in GitHub Secrets.")
         return
 
-    # Payload Construction
     payload = {
         "prompt": prompt,
         "loras": [{"path": my_lora_url.strip(), "scale": 1.15}], 
@@ -39,13 +36,9 @@ def generate_broadcast_image():
     req = urllib.request.Request(
         "https://fal.run/fal-ai/flux-lora",
         data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Authorization": f"Key {fal_key}",
-            "Content-Type": "application/json"
-        }
+        headers={"Authorization": f"Key {fal_key}", "Content-Type": "application/json"}
     )
     
-    # 3-Attempt Fail-safe for Broadcast Reliability
     for attempt in range(3):
         try:
             print(f"Starting Production (Attempt {attempt + 1}/3)...")
@@ -60,6 +53,6 @@ def generate_broadcast_image():
             
     print("FATAL ERROR: Automated production failed after 3 attempts.")
 
-# THE CRITICAL FIX: EXACTLY TWO UNDERSCORES (__) ON BOTH SIDES
+# MANDATORY: TWO UNDERSCORES (__) ON BOTH SIDES OF name AND main
 if _name_ == "_main_":
     generate_broadcast_image()
