@@ -1,0 +1,20 @@
+name: Vitt Wire Daily Broadcast
+on:
+  schedule:
+    - cron: '30 12 * * *' # Automated evening post (6:00 PM IST)
+    - cron: '30 2 * * *'  # Automated morning post (8:00 AM IST)
+  workflow_dispatch:      # Allows us to trigger it manually for today's launch
+
+jobs:
+  generate_and_post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Generate AI News Video
+        env:
+          FAL_KEY: ${{ secrets.FAL_KEY }}
+        run: |
+          echo "Triggering AdityaSinghAI for The Vitt Wire..."
+          # The logic for your 'thick hair volume' and financial news fetch goes here next
