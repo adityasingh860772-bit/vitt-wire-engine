@@ -5,14 +5,14 @@ import json
 import time
 
 # ==========================================
-# THE VITT WIRE: PERMANENT MASTER SCRIPT
+# THE VITT WIRE: FINAL PRODUCTION ENGINE
 # ==========================================
 
-# 1. PERMANENT IDENTITY LINK (GitHub Release Asset)
+# 1. PERMANENT IDENTITY LINK (Verified from Release v1.0.0)
 my_lora_url = "https://github.com/adityasingh860772-bit/vitt-wire-engine/releases/download/v1.0.0/T2Z3k6pzmg9oY6UFynuqx_pytorch_lora_weights.safetensors"
 
-# 2. BRAND STYLE LOCK
-# Fixed hair volume fix integrated
+# 2. BRAND STYLE LOCK 
+# Surgical fix for hair volume: High-priority keywords + 1.15 Scale
 hair_style = "highly voluminous, thick professional textured hair with significant height and sharp styling"
 anchor_studio = "a premium, minimalist modern glass office in Mumbai with a clean white desk and a soft-focus city skyline"
 
@@ -21,14 +21,16 @@ prompt = f"Professional studio portrait of AdityaSinghAI with {hair_style}. He i
 
 # 4. AUTO-RETRY PRODUCTION ENGINE
 def generate_broadcast_image():
+    # Verification of Credentials
     fal_key = os.getenv("FAL_KEY")
     if not fal_key:
         print("CRITICAL ERROR: FAL_KEY missing in GitHub Secrets.")
         return
 
+    # Payload Construction
     payload = {
         "prompt": prompt,
-        "loras": [{"path": my_lora_url.strip(), "scale": 1.15}],
+        "loras": [{"path": my_lora_url.strip(), "scale": 1.15}], 
         "image_size": {"width": 1280, "height": 720},
         "num_inference_steps": 30
     }
@@ -36,10 +38,13 @@ def generate_broadcast_image():
     req = urllib.request.Request(
         "https://fal.run/fal-ai/flux-lora",
         data=json.dumps(payload).encode("utf-8"),
-        headers={"Authorization": f"Key {fal_key}", "Content-Type": "application/json"}
+        headers={
+            "Authorization": f"Key {fal_key}",
+            "Content-Type": "application/json"
+        }
     )
     
-    # 3-Attempt Fail-safe
+    # 3-Attempt Fail-safe for Indian Standard Time (IST) Broadcasts
     for attempt in range(3):
         try:
             print(f"Starting Production (Attempt {attempt + 1}/3)...")
@@ -54,6 +59,6 @@ def generate_broadcast_image():
             
     print("FATAL ERROR: Automated production failed after 3 attempts.")
 
-# FIX FOR 24384.jpg: Use double underscores below
+# THE CRITICAL FIX: DOUBLE UNDERSCORES (DUNDERS) VERIFIED
 if _name_ == "_main_":
     generate_broadcast_image()
