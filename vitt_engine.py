@@ -53,6 +53,6 @@ def generate_broadcast_image():
             
     print("FATAL ERROR: Automated production failed after 3 attempts.")
 
-# MANDATORY: TWO UNDERSCORES (__) ON BOTH SIDES OF name AND main
+# THE FINAL GATE: TWO UNDERSCORES (__) ARE MANDATORY ON BOTH SIDES
 if _name_ == "_main_":
     generate_broadcast_image()
