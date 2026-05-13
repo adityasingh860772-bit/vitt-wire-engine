@@ -2,50 +2,57 @@ import os
 import urllib.request
 import urllib.error
 import json
+import time
 
 # ==========================================
-# PRODUCTION MASTER CONFIGURATION
+# THE VITT WIRE: PERMANENT PRODUCTION ENGINE
 # ==========================================
 
-# 1. PERMANENT IDENTITY LINK (Your 1,500-step DNA)
-my_lora_url = "https://v3b.fal.media/files/b/0a9a022b/T2Z3k6pzmg9oY5UFynuqx_pytorch_lora_weights.safetensors"
+# 1. PERMANENT IDENTITY LINK (Verified from GitHub Release Assets)
+my_lora_url = "https://github.com/adityasingh860772-bit/vitt-wire-engine/releases/download/v1.0.0/T2Z3k6pzmg9oY6UFynuqx_pytorch_lora_weights.safetensors"
 
-# 2. THE VISUAL BLUEPRINT
-# We lock the hair volume here so every generation follows this 'look'
+# 2. BRAND STYLE LOCK
+# Optimized for maximum hair volume and cinematic aesthetics
+hair_style = "highly voluminous, thick professional textured hair with significant height and sharp styling"
 anchor_studio = "a premium, minimalist modern glass office in Mumbai with a clean white desk and a soft-focus city skyline"
-hair_style = "highly voluminous, thick professional textured hair with significant height and styling"
 
 # 3. THE MASTER PROMPT
 prompt = f"Professional studio portrait of AdityaSinghAI with {hair_style}. He is wearing a tailored navy blue three-piece suit, sitting at {anchor_studio}. High-end broadcast lighting, 8k photorealistic, sharp focus."
 
-# 4. THE PRODUCTION ENGINE
-fal_key = os.getenv("FAL_KEY")
+# 4. AUTO-RETRY PRODUCTION ENGINE
+def generate_broadcast_image():
+    fal_key = os.getenv("FAL_KEY")
+    if not fal_key:
+        print("CRITICAL ERROR: FAL_KEY missing in GitHub Secrets.")
+        return
 
-if fal_key:
     payload = {
         "prompt": prompt,
-        "loras": [{"path": my_lora_url, "scale": 1.15}], # 1.15 scale locks in your specific hair/face details
-        "image_size": {"width": 1280, "height": 720}
+        "loras": [{"path": my_lora_url.strip(), "scale": 1.15}], # 1.15 scale ensures hair volume and sharp features
+        "image_size": {"width": 1280, "height": 720},
+        "num_inference_steps": 30
     }
     
     req = urllib.request.Request(
         "https://fal.run/fal-ai/flux-lora",
         data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Authorization": f"Key {fal_key}",
-            "Content-Type": "application/json"
-        }
+        headers={"Authorization": f"Key {fal_key}", "Content-Type": "application/json"}
     )
     
-    try:
-        with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read().decode("utf-8"))
-            final_url = result.get("images", [{}])[0].get("url")
-            print(f"IMAGE_READY: {final_url}")
-    except urllib.error.HTTPError as e:
-        error_details = e.read().decode("utf-8")
-        print(f"Production Error (Server Details): {error_details}")
-    except Exception as e:
-        print(f"System Error: {e}")
-else:
-    print("Error: FAL_KEY not found. Check GitHub Secrets.")
+    # 3-Attempt Fail-safe for 9:00 AM and 6:00 PM IST reliability
+    for attempt in range(3):
+        try:
+            print(f"Starting Production (Attempt {attempt + 1}/3)...")
+            with urllib.request.urlopen(req) as response:
+                result = json.loads(response.read().decode("utf-8"))
+                image_url = result.get("images", [{}])[0].get("url")
+                print(f"IMAGE_READY: {image_url}")
+                return image_url
+        except Exception as e:
+            print(f"Attempt {attempt + 1} failed. Retrying in 10 seconds... Error: {e}")
+            time.sleep(10)
+            
+    print("FATAL ERROR: Automated production failed after 3 attempts.")
+
+if _name_ == "_main_":
+    generate_broadcast_image()
