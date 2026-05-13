@@ -3,24 +3,28 @@ import urllib.request
 import urllib.error
 import json
 
-# 1. THE FRESH IDENTITY LINK (Updated)
-my_lora_url = "https://v3b.fal.media/files/b/0a9a022b/T2Z3k6pzmg9oY6UFynuqx_pytorch_lora_weights.safetensors"
+# ==========================================
+# PRODUCTION MASTER CONFIGURATION
+# ==========================================
 
-# 2. PRODUCTION SETTINGS 
-# Based in Jharkhand but setting the scene in a high-end Mumbai studio
+# 1. PERMANENT IDENTITY LINK (Your 1,500-step DNA)
+my_lora_url = "https://v3b.fal.media/files/b/0a9a022b/T2Z3k6pzmg9oY5UFynuqx_pytorch_lora_weights.safetensors"
+
+# 2. THE VISUAL BLUEPRINT
+# We lock the hair volume here so every generation follows this 'look'
 anchor_studio = "a premium, minimalist modern glass office in Mumbai with a clean white desk and a soft-focus city skyline"
+hair_style = "highly voluminous, thick professional textured hair with significant height and styling"
 
 # 3. THE MASTER PROMPT
-# Uses your specific 'AdityaSinghAI' trigger word
-prompt = f"Professional studio portrait of AdityaSinghAI wearing a tailored navy blue three-piece suit, sitting at {anchor_studio}. High-end broadcast lighting, 8k photorealistic."
+prompt = f"Professional studio portrait of AdityaSinghAI with {hair_style}. He is wearing a tailored navy blue three-piece suit, sitting at {anchor_studio}. High-end broadcast lighting, 8k photorealistic, sharp focus."
 
-# 4. THE FLUX LORA ENGINE
+# 4. THE PRODUCTION ENGINE
 fal_key = os.getenv("FAL_KEY")
 
 if fal_key:
     payload = {
         "prompt": prompt,
-        "loras": [{"path": my_lora_url, "scale": 1.0}],
+        "loras": [{"path": my_lora_url, "scale": 1.15}], # 1.15 scale locks in your specific hair/face details
         "image_size": {"width": 1280, "height": 720}
     }
     
@@ -44,4 +48,4 @@ if fal_key:
     except Exception as e:
         print(f"System Error: {e}")
 else:
-    print("Error: FAL_KEY not found in environment secrets.")
+    print("Error: FAL_KEY not found. Check GitHub Secrets.")
