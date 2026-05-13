@@ -5,14 +5,14 @@ import json
 import time
 
 # ==========================================
-# THE VITT WIRE: PERMANENT PRODUCTION ENGINE
+# THE VITT WIRE: PERMANENT MASTER SCRIPT
 # ==========================================
 
-# 1. PERMANENT IDENTITY LINK (Verified from GitHub Release Assets)
+# 1. PERMANENT IDENTITY LINK (GitHub Release Asset)
 my_lora_url = "https://github.com/adityasingh860772-bit/vitt-wire-engine/releases/download/v1.0.0/T2Z3k6pzmg9oY6UFynuqx_pytorch_lora_weights.safetensors"
 
 # 2. BRAND STYLE LOCK
-# Optimized for maximum hair volume and cinematic aesthetics
+# Fixed hair volume fix integrated
 hair_style = "highly voluminous, thick professional textured hair with significant height and sharp styling"
 anchor_studio = "a premium, minimalist modern glass office in Mumbai with a clean white desk and a soft-focus city skyline"
 
@@ -28,7 +28,7 @@ def generate_broadcast_image():
 
     payload = {
         "prompt": prompt,
-        "loras": [{"path": my_lora_url.strip(), "scale": 1.15}], # 1.15 scale ensures hair volume and sharp features
+        "loras": [{"path": my_lora_url.strip(), "scale": 1.15}],
         "image_size": {"width": 1280, "height": 720},
         "num_inference_steps": 30
     }
@@ -39,7 +39,7 @@ def generate_broadcast_image():
         headers={"Authorization": f"Key {fal_key}", "Content-Type": "application/json"}
     )
     
-    # 3-Attempt Fail-safe for 9:00 AM and 6:00 PM IST reliability
+    # 3-Attempt Fail-safe
     for attempt in range(3):
         try:
             print(f"Starting Production (Attempt {attempt + 1}/3)...")
@@ -54,5 +54,6 @@ def generate_broadcast_image():
             
     print("FATAL ERROR: Automated production failed after 3 attempts.")
 
+# FIX FOR 24384.jpg: Use double underscores below
 if _name_ == "_main_":
     generate_broadcast_image()
