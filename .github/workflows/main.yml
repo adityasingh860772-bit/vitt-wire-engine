@@ -1,9 +1,9 @@
 name: Vitt Wire Daily Broadcast
+
 on:
+  workflow_dispatch: # Allows you to trigger it manually for testing
   schedule:
-    - cron: '30 12 * * *' # Automated evening post (6:00 PM IST)
-    - cron: '30 2 * * *'  # Automated morning post (8:00 AM IST)
-  workflow_dispatch:      # Allows us to trigger it manually for today's launch
+    - cron: '30 12 * * *' # Automatically runs at 6:00 PM IST daily
 
 jobs:
   generate_and_post:
@@ -12,9 +12,13 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Generate AI News Video
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Run Production Engine
         env:
           FAL_KEY: ${{ secrets.FAL_KEY }}
         run: |
-          echo "Triggering AdityaSinghAI for The Vitt Wire..."
-          # The logic for your 'thick hair volume' and financial news fetch goes here next
+          python vitt_engine.py
