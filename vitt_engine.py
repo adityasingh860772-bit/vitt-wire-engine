@@ -12,7 +12,7 @@ import time
 my_lora_url = "https://github.com/adityasingh860772-bit/vitt-wire-engine/releases/download/v1.0.0/T2Z3k6pzmg9oY6UFynuqx_pytorch_lora_weights.safetensors"
 
 # 2. BRAND STYLE LOCK 
-# Surgical hair volume fix: High-priority anchors + 1.15 Scale
+# Fixed hair volume fix: High-priority anchors + 1.15 Scale
 hair_style = "highly voluminous, thick professional textured hair with significant height and sharp styling"
 anchor_studio = "a premium, minimalist modern glass office in Mumbai with a clean white desk and a soft-focus city skyline"
 
@@ -53,6 +53,6 @@ def generate_broadcast_image():
             
     print("FATAL ERROR: Automated production failed after 3 attempts.")
 
-# THE FINAL GATE: TWO UNDERSCORES (__) ARE MANDATORY ON BOTH SIDES
-if _name_ == "_main_":
+# THE FINAL GATE: DOUBLE UNDERSCORES (__) ARE MANDATORY
+if __name__ == "__main__":
     generate_broadcast_image()
