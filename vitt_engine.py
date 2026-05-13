@@ -3,20 +3,21 @@ import urllib.request
 import urllib.error
 import json
 
-# 1. THE PERMANENT IDENTITY LINK
-my_lora_url = "https://v3b.fal.media/files/b/0a9a022b/T273k6pzmg9oY5UFynuqx_pytorch_lora_weights.safetensors"
+# 1. THE FRESH IDENTITY LINK (Updated)
+my_lora_url = "https://v3b.fal.media/files/b/0a9a022b/T2Z3k6pzmg9oY6UFynuqx_pytorch_lora_weights.safetensors"
 
-# 2. PRODUCTION SETTINGS
+# 2. PRODUCTION SETTINGS 
+# Based in Jharkhand but setting the scene in a high-end Mumbai studio
 anchor_studio = "a premium, minimalist modern glass office in Mumbai with a clean white desk and a soft-focus city skyline"
 
 # 3. THE MASTER PROMPT
+# Uses your specific 'AdityaSinghAI' trigger word
 prompt = f"Professional studio portrait of AdityaSinghAI wearing a tailored navy blue three-piece suit, sitting at {anchor_studio}. High-end broadcast lighting, 8k photorealistic."
 
 # 4. THE FLUX LORA ENGINE
 fal_key = os.getenv("FAL_KEY")
 
 if fal_key:
-    # HARDENED PAYLOAD: Uses exact dimensions and removes optional flags to prevent 422 errors
     payload = {
         "prompt": prompt,
         "loras": [{"path": my_lora_url, "scale": 1.0}],
@@ -38,7 +39,6 @@ if fal_key:
             final_url = result.get("images", [{}])[0].get("url")
             print(f"IMAGE_READY: {final_url}")
     except urllib.error.HTTPError as e:
-        # DETAILED ERROR CATCHER: Prints the exact reason for the 422 error
         error_details = e.read().decode("utf-8")
         print(f"Production Error (Server Details): {error_details}")
     except Exception as e:
