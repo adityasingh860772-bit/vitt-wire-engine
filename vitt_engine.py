@@ -5,7 +5,7 @@ import json
 
 # 1. THE PERMANENT IDENTITY LINK
 # PASTE the link you just copied between the quotes below:
-my_lora_url = https://v3b.fal.media/files/b/0a9a022b/T2Z3k6pzmg9oY6UFynuqx_pytorch_lora_weights.safetensors
+my_lora_url = "https://v3b.fal.media/files/b/0a9a022b/T273k6pzmg9oY5UFynuqx_pytorch_lora_weights.safetensors"
 
 # 2. PRODUCTION SETTINGS
 anchor_studio = "a premium, minimalist modern glass office in Mumbai with a clean white desk and a soft-focus city skyline"
