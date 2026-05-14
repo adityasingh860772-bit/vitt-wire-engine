@@ -19,7 +19,7 @@ def start_engine(video_file, caption):
         print(f"Meta Container Failed: {res}")
         return
 
-    print("Meta is rendering the Reel... Waiting 60s.")
+    print("Meta Rendering... Waiting 60s.")
     time.sleep(60)
 
     pub_url = f"https://graph.facebook.com/v22.0/{IG_USER_ID}/media_publish"
