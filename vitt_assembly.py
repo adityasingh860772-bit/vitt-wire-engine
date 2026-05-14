@@ -1,4 +1,4 @@
-import os, random, requests, datetime, subprocess, sys, builtins
+import os, random, requests, datetime, sys, builtins
 import pytz 
 import fal_client
 from moviepy.editor import *
@@ -7,37 +7,38 @@ def print(*args, **kwargs):
     kwargs['flush'] = True
     builtins.print(*args, **kwargs)
 
-# --- SECRETS & DNA ---
+# --- SECRETS & REPO LINKS ---
 LORA_URL = "https://github.com/adityasingh860772-bit/vitt-wire-engine/releases/download/v1.0.0/T2Z3k6pzmg9oY6UFynuqx_pytorch_lora_weights.safetensors"
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 FAL_KEY = os.environ.get("FAL_KEY")
 
-# --- 15-DAY PROFESSIONAL WARDROBE ---
+# --- 15-DAY WARDROBE ---
 WARDROBE = [
-    "sharp navy blue blazer, white shirt", "charcoal grey Nehru jacket", "solid black polo", 
-    "olive green crew neck", "beige linen shirt", "royal blue shirt, silver tie", 
-    "light grey blazer, black tee", "maroon shirt, folded sleeves", "white shirt, black waistcoat", 
+    "sharp navy blue blazer, white formal shirt", "charcoal grey Nehru jacket", "premium solid black polo", 
+    "sleek olive green crew neck", "professional beige linen shirt", "royal blue shirt, silver tie", 
+    "light grey blazer over black tee", "maroon shirt, folded sleeves", "white shirt with black waistcoat", 
     "dark forest green blazer", "sky blue shirt, navy tie", "tan leather jacket", 
-    "classic black suit", "grey textured blazer", "off-white Nehru jacket"
+    "classic black suit, white shirt", "grey textured blazer", "off-white premium Nehru jacket"
 ]
 
 def get_verified_script(hour):
-    print("--- Phase 1: Fetching LIVE Verified Global News ---")
+    print("--- Phase 1: Grounding with Verified Global Sources ---")
     edition = "Morning Briefing" if hour < 15 else "Evening Wrap-Up"
-    focus = "Global cues, verified pre-market international news, and opening predictions" if hour < 15 else "Day's official closing data, global market summary, and verified top gainers/losers"
+    focus = "Pre-market opening, global cues, verified indices" if hour < 15 else "Closing market data, top gainers/losers, global wrap"
     
     try:
         from google import genai
         from google.genai import types
         client = genai.Client(api_key=GEMINI_API_KEY)
         
-        prompt = f"Act as Financial Analyst Aditya Singh for 'The Vitt Wire'. Edition: {edition}. Focus: {focus}. STRICT RULE: Search the web for today's real-time verified financial data and base your script on it. Use High-level Hinglish. Keep it crisp 50-60 words (30 seconds). Format: SCRIPT: [text] CAPTION: [caption with trending hashtags]"
+        prompt = f"Act as Financial Analyst Aditya Singh for 'The Vitt Wire'. Edition: {edition}. Focus: {focus}. STRICT RULE: Search the web for today's real-time verified financial data and base your script on it. High-level Hinglish. Keep it crisp 55 words. Format: SCRIPT: [text] CAPTION: [caption with hashtags]"
         
         res = client.models.generate_content(
             model='gemini-1.5-flash', 
             contents=prompt,
-            config=types.GenerateContentConfig(tools=[{"google_search": {}}])
+            config=types.GenerateContentConfig(tools=[types.Tool(google_search_retrieval=types.GoogleSearchRetrieval())])
         )
+        
         raw = res.text.replace('*', '').strip()
         script = raw.split("CAPTION:")[0].replace("SCRIPT:", "").strip()
         caption = raw.split("CAPTION:")[1].strip() if "CAPTION:" in raw else "#TheVittWire #FinanceNews"
@@ -47,7 +48,7 @@ def get_verified_script(hour):
         return "Namaste India! Market updates ke liye bane rahein The Vitt Wire par.", "#TheVittWire"
 
 def generate_aditya_voice(text):
-    print("--- Phase 3: Cloning Aditya's Voice (Zero Cost XTTS) ---")
+    print("--- Phase 3: XTTS-v2 Voice Cloning (Using aditya_voice.wav) ---")
     if not os.path.exists("aditya_voice.wav"):
         print("CRITICAL ERROR: 'aditya_voice.wav' NOT FOUND in Repo!")
         sys.exit(1)
@@ -65,17 +66,12 @@ def assembly_line():
     script, caption = get_verified_script(now.hour)
     
     outfit = WARDROBE[now.toordinal() % 15]
-    prop = random.choice(["sleek tablet", "financial files", "smartphone face down"])
+    prop = random.choice(["sleek tablet", "financial files", "smartphone"])
     
-    print(f"--- Phase 2: Flux Visual Generation (Outfit: {outfit}) ---")
-    img_prompt = f"Aditya Singh wearing {outfit}, sitting in a professional news studio. He has thick hair volume, professionally styled hair. Cinematic lighting with subtle laptop screen glow on face, professional broadcast mic, branded coffee mug, {prop} on desk, 8k photorealistic."
+    print(f"--- Phase 2: Flux Visual Generation ---")
+    img_prompt = f"Aditya Singh wearing {outfit}, sitting in a financial studio. He has thick hair volume, professionally styled groomed hair. Cinematic lighting, subtle laptop screen glow on face, broadcast mic, branded coffee mug, {prop} on desk, 8k photorealistic."
     
-    img_res = fal_client.subscribe("fal-ai/flux-lora", arguments={
-        "prompt": img_prompt, 
-        "image_size": "portrait_16_9", 
-        "loras": [{"path": LORA_URL, "scale": 1.0}]
-    })
-    
+    img_res = fal_client.subscribe("fal-ai/flux-lora", arguments={"prompt": img_prompt, "image_size": "portrait_16_9", "loras": [{"path": LORA_URL, "scale": 1.0}]})
     flux_url = img_res['images'][0]['url']
     
     generate_aditya_voice(script)
@@ -85,20 +81,10 @@ def assembly_line():
         "source_image_url": flux_url, "driven_audio_url": fal_client.upload_file("v.wav"),
         "still_mode": True, "preprocess": "full", "enhancer": "gfpgan"
     })
-    
-    v_url = None
-    if isinstance(anim, dict):
-        v_url = anim.get("video_url") or anim.get("url")
-        if not v_url and "video" in anim:
-            v_url = anim["video"].get("url") if isinstance(anim["video"], dict) else anim["video"]
-
-    if not v_url:
-        print("CRITICAL ERROR: Animation URL missing.")
-        sys.exit(1)
-
+    v_url = anim.get("video_url") or anim.get("url") or anim["video"]["url"]
     with open("raw.mp4", 'wb') as f: f.write(requests.get(v_url).content)
 
-    print("--- Phase 5: Post-Production (Instagram Safe Zones) ---")
+    print("--- Phase 5: Safe-Zone Editing & BGM ---")
     clip = VideoFileClip("raw.mp4")
     safe_zone_y = clip.h - 450 # Subtitles safe from IG UI
     
@@ -114,9 +100,13 @@ def assembly_line():
 
     final_clip = CompositeVideoClip([clip, bar, name, logo] + subs)
     
+    final_audio = clip.audio
     if os.path.exists("bgm.mp3"):
         bgm = AudioFileClip("bgm.mp3").volumex(0.12).set_duration(clip.duration)
-        final_clip = final_clip.set_audio(CompositeAudioClip([clip.audio, bgm]))
+        final_audio = CompositeAudioClip([clip.audio, bgm])
+
+    final_audio = final_audio.audio_fadeout(0.5) # Loop fade fix
+    final_clip = final_clip.set_audio(final_audio)
 
     final_clip.write_videofile("The_Vitt_Wire_Final.mp4", fps=24, codec="libx264")
     with open("meta.txt", "w") as f: f.write(f"The_Vitt_Wire_Final.mp4|{caption}")
