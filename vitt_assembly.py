@@ -3,7 +3,6 @@ import random
 import requests
 import datetime
 import fal_client
-import google.generativeai as genai
 from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip
 from instagrapi import Client
 
@@ -17,8 +16,6 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 FAL_KEY = os.environ.get("FAL_KEY")
 IG_USERNAME = os.environ.get("IG_USERNAME")
 IG_PASSWORD = os.environ.get("IG_PASSWORD")
-
-genai.configure(api_key=GEMINI_API_KEY)
 
 # ==========================================
 # 2. THE 15-DAY NO-REPEAT WARDROBE
@@ -46,16 +43,13 @@ RANDOM_PROPS = ["a sleek tablet", "a stack of financial files", "a smartphone fa
 POSITIONS = ["on the left", "in the foreground", "next to the mic"]
 
 # ==========================================
-# 3. AUTOPILOT MODULES
+# 3. AUTOPILOT MODULES (REST API BYPASS)
 # ==========================================
 
 def generate_daily_script():
-    print("Writing Crypto/Business script for The Vitt Wire...")
+    print("Writing Crypto/Business script for The Vitt Wire via Direct REST API...")
     ist_now = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
     edition = "Morning Briefing" if ist_now.hour < 15 else "Evening Wrap-Up"
-    
-    # THE ULTIMATE FIX: Using 'gemini-pro' which is universally supported and bypasses the 404 error on legacy SDKs.
-    model = genai.GenerativeModel('gemini-pro')
     
     prompt = (
         f"Act as a Financial Analyst for 'The Vitt Wire'. Edition: {edition}. "
@@ -64,8 +58,20 @@ def generate_daily_script():
         "Format: SCRIPT: [text] CAPTION: [caption with hashtags]"
     )
     
-    response = model.generate_content(prompt)
-    raw_text = response.text.replace('*', '').strip()
+    # Bypassing the broken SDK completely
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    headers = {'Content-Type': 'application/json'}
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}]
+    }
+    
+    response = requests.post(url, headers=headers, json=payload)
+    if response.status_code != 200:
+        raise Exception(f"API Bypass Failed: {response.text}")
+        
+    response_data = response.json()
+    raw_text = response_data['candidates'][0]['content']['parts'][0]['text'].replace('*', '').strip()
+    
     script_part = raw_text.split("CAPTION:")[0].replace("SCRIPT:", "").strip()
     caption_part = raw_text.split("CAPTION:")[1].strip() if "CAPTION:" in raw_text else "#TheVittWire"
     return script_part, caption_part
