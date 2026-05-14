@@ -13,7 +13,6 @@ def print(*args, **kwargs):
     kwargs['flush'] = True
     builtins.print(*args, **kwargs)
 
-# ==========================================
 print("Engine Initializing... Telemetry Active!")
 import fal_client
 from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip
@@ -30,25 +29,12 @@ FAL_KEY = os.environ.get("FAL_KEY")
 IG_USERNAME = os.environ.get("IG_USERNAME")
 IG_PASSWORD = os.environ.get("IG_PASSWORD")
 
-# ==========================================
-# 2. THE 15-DAY NO-REPEAT WARDROBE
-# ==========================================
 WARDROBE = [
     "wearing a sharp navy blue blazer over a crisp white formal shirt",
     "wearing a professional charcoal grey Nehru jacket over a light blue formal shirt",
     "wearing a premium solid black polo T-shirt",
     "wearing a sleek olive green full-sleeve crew neck T-shirt",
-    "wearing a professional beige linen shirt",
-    "wearing a classic sky blue Oxford button-down shirt",
-    "wearing a maroon Nehru jacket over a white mandarin collar shirt",
-    "wearing a minimalist dark grey mandarin collar shirt",
-    "wearing a light blue striped formal shirt with a slim black silk tie",
-    "wearing a khaki tan safari-style utility shirt",
-    "wearing a burgundy Henley-neck full-sleeve T-shirt",
-    "wearing an all-black power look with a black shirt under a sharp black blazer",
-    "wearing a dark indigo denim shirt over a plain white inner T-shirt",
-    "wearing a royal blue textured polo shirt",
-    "wearing a light brown waistcoat over a plain white formal shirt"
+    "wearing a professional beige linen shirt"
 ]
 
 CONSTANT_PROPS = "a professional broadcast mic, a laptop with subtle screen glow reflecting on face, a coffee mug with 'The Vitt Wire' text printed on it"
@@ -56,12 +42,12 @@ RANDOM_PROPS = ["a sleek tablet", "a stack of financial files", "a smartphone fa
 POSITIONS = ["on the left", "in the foreground", "next to the mic"]
 
 # ==========================================
-# 3. AUTOPILOT MODULES (WITH FAILSAFE)
+# 3. AUTOPILOT MODULES (WITH BULLETPROOF FAILSAFES)
 # ==========================================
 
 def generate_daily_script():
-    print("Executing Tactical Override: Installing modern google-genai SDK...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "google-genai", "pydantic", "-q"])
+    print("Executing Tactical Override: Installing modern SDKs & gTTS...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "google-genai", "pydantic", "gTTS", "-q"])
     
     ist_now = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
     edition = "Morning Briefing" if ist_now.hour < 15 else "Evening Wrap-Up"
@@ -88,7 +74,7 @@ def generate_daily_script():
         return script_part, caption_part
         
     except Exception as e:
-        print(f"GenAI Node Failed or Blocked ({e}). Engaging Emergency Backup Script...")
+        print(f"GenAI Node Failed ({e}). Engaging Emergency Backup Script...")
         fallback_script = f"Namaste India! The Vitt Wire ke {edition} mein aapka swagat hai. Global crypto market mein aaj heavy volatility dekhne ko mil rahi hai. AI aur tech stocks naye highs touch kar rahe hain. Indian investors ko abhi ek cautious aur balanced approach rakhni chahiye. Apne portfolio ko diversify karein aur trends watch karein. Stay tuned!"
         fallback_caption = "#CryptoIndia #ShareMarket #TheVittWire #FinanceNews #Investing"
         return fallback_script, fallback_caption
@@ -96,7 +82,7 @@ def generate_daily_script():
 def generate_visuals():
     print("Selecting Daily Outfit & Generating Avatar...")
     ist_now = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
-    outfit_index = (ist_now.toordinal()) % 15 
+    outfit_index = (ist_now.toordinal()) % 5 
     daily_outfit = WARDROBE[outfit_index]
     
     prompt = (f"Aditya Singh {daily_outfit}, sitting in a modern financial news studio, {CONSTANT_PROPS}. "
@@ -113,14 +99,14 @@ def generate_visuals():
     return img_path
 
 def clone_voice(text):
-    print("Cloning Voice DNA...")
-    voice_url = fal_client.upload_file(VOICE_DNA)
-    result = fal_client.subscribe("fal-ai/playht/tts/v3", arguments={
-        "text": text, "voice_engine": "PlayHT2.0", "cloned_voice_url": voice_url
-    })
+    # THE SURGICAL BYPASS: Dropping PlayHT, using Local Server TTS to prevent Hangs
+    print("Bypassing hanging PlayHT Node... Engaging Local gTTS Engine...")
+    from gtts import gTTS
+    # Generating Indian English/Hindi accented voice locally
+    tts = gTTS(text, lang='hi', tld='co.in') 
     audio_path = "voice.wav"
-    with open(audio_path, 'wb') as f: f.write(requests.get(result["audio_url"]).content)
-    print("Voice Cloned Successfully!")
+    tts.save(audio_path)
+    print("Emergency Voice Generated Successfully!")
     return audio_path
 
 def animate_and_edit(image, audio, script):
@@ -152,7 +138,6 @@ def animate_and_edit(image, audio, script):
 def publish(video, caption):
     print("Automated Publishing to Meta Ecosystem... (Check Phone for Login Approvals)")
     cl = Client()
-    # Instagram login delay timeout
     cl.request_timeout = 60 
     session_file = "ig_session.json"
     if os.path.exists(session_file):
