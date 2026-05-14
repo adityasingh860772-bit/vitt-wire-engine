@@ -54,8 +54,8 @@ def generate_daily_script():
     ist_now = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
     edition = "Morning Briefing" if ist_now.hour < 15 else "Evening Wrap-Up"
     
-    # FIXED: Standard model name strictly 'gemini-1.5-flash'
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # THE ULTIMATE FIX: Using 'gemini-pro' which is universally supported and bypasses the 404 error on legacy SDKs.
+    model = genai.GenerativeModel('gemini-pro')
     
     prompt = (
         f"Act as a Financial Analyst for 'The Vitt Wire'. Edition: {edition}. "
