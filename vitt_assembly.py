@@ -54,12 +54,12 @@ def generate_daily_script():
     ist_now = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
     edition = "Morning Briefing" if ist_now.hour < 15 else "Evening Wrap-Up"
     
-    # FIXED: Standard model name without 'models/' prefix
+    # FIXED: Standard model name strictly 'gemini-1.5-flash'
     model = genai.GenerativeModel('gemini-1.5-flash')
     
     prompt = (
         f"Act as a Financial Analyst for 'The Vitt Wire'. Edition: {edition}. "
-        "Focus: Latest Global Crypto/AI news and its IMPACT on the Indian Market/Investors."
+        "Focus: Latest Global Crypto/AI news and its IMPACT on the Indian Market/Investors. "
         "Tone: Energetic, Professional, Hinglish. MANDATORY: Script exactly 50-60 words. "
         "Format: SCRIPT: [text] CAPTION: [caption with hashtags]"
     )
