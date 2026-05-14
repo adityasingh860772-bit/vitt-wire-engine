@@ -1,10 +1,10 @@
 name: Vitt Wire Daily Broadcast
 
 on:
-  workflow_dispatch: # Manual test ke liye
+  workflow_dispatch:
   schedule:
-    - cron: '30 3 * * *'  # 9:00 AM IST (UTC 3:30 AM)
-    - cron: '30 9 * * *'  # 3:00 PM IST (UTC 9:30 AM)
+    - cron: '30 3 * * *'  # 9:00 AM IST
+    - cron: '30 12 * * *' # 6:00 PM IST
 
 jobs:
   build-and-post:
@@ -21,20 +21,20 @@ jobs:
       - name: Install System Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg ghostscript
+          sudo apt-get install -y ffmpeg ghostscript imagemagick libsndfile1
+          sudo sed -i 's/domain="path" rights="none" pattern="@\*"/domain="path" rights="read|write" pattern="@\*"/g' /etc/ImageMagick-6/policy.xml
 
       - name: Install Python Libraries
         run: |
-          pip install requests fal-client moviepy==1.0.3 google-genai pytz gTTS
+          pip install requests fal-client moviepy==1.0.3 google-genai pytz TTS
 
-      - name: Run Assembly (Content Creation)
+      - name: Run Assembly
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           FAL_KEY: ${{ secrets.FAL_KEY }}
         run: python vitt_assembly.py
 
-      - name: Run Engine (Instagram Posting)
+      - name: Run Engine
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID }}
         run: python vitt_engine.py
