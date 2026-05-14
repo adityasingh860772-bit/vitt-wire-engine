@@ -99,10 +99,8 @@ def generate_visuals():
     return img_path
 
 def clone_voice(text):
-    # THE SURGICAL BYPASS: Dropping PlayHT, using Local Server TTS to prevent Hangs
     print("Bypassing hanging PlayHT Node... Engaging Local gTTS Engine...")
     from gtts import gTTS
-    # Generating Indian English/Hindi accented voice locally
     tts = gTTS(text, lang='hi', tld='co.in') 
     audio_path = "voice.wav"
     tts.save(audio_path)
@@ -115,8 +113,17 @@ def animate_and_edit(image, audio, script):
         "source_image_url": fal_client.upload_file(image),
         "driven_audio_url": fal_client.upload_file(audio), "still_mode": True
     })
+    
+    print(f"FAL AI Response Keys: {res.keys()}") # Debug telemetry
+    
+    # THE UNIVERSAL CATCHER: Extract video URL no matter what FAL names it
+    target_url = res.get("video_url") or (res.get("video") and res.get("video", {}).get("url")) or res.get("url")
+    
+    if not target_url:
+        raise Exception(f"Video URL missing! Raw FAL Response: {res}")
+        
     raw_video = "raw.mp4"
-    with open(raw_video, 'wb') as f: f.write(requests.get(res["video_url"]).content)
+    with open(raw_video, 'wb') as f: f.write(requests.get(target_url).content)
     
     video = VideoFileClip(raw_video)
     words = script.split()
