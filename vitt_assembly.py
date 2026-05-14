@@ -4,6 +4,17 @@ import requests
 import datetime
 import subprocess
 import sys
+import builtins
+
+# ==========================================
+# 0. TELEMETRY OVERRIDE (LIVE LOGS FORCE FLUSH)
+# ==========================================
+def print(*args, **kwargs):
+    kwargs['flush'] = True
+    builtins.print(*args, **kwargs)
+
+# ==========================================
+print("Engine Initializing... Telemetry Active!")
 import fal_client
 from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip
 from instagrapi import Client
@@ -78,9 +89,6 @@ def generate_daily_script():
         
     except Exception as e:
         print(f"GenAI Node Failed or Blocked ({e}). Engaging Emergency Backup Script...")
-        # ==============================================
-        # GUARANTEED FAILSAFE: System will NEVER crash here again.
-        # ==============================================
         fallback_script = f"Namaste India! The Vitt Wire ke {edition} mein aapka swagat hai. Global crypto market mein aaj heavy volatility dekhne ko mil rahi hai. AI aur tech stocks naye highs touch kar rahe hain. Indian investors ko abhi ek cautious aur balanced approach rakhni chahiye. Apne portfolio ko diversify karein aur trends watch karein. Stay tuned!"
         fallback_caption = "#CryptoIndia #ShareMarket #TheVittWire #FinanceNews #Investing"
         return fallback_script, fallback_caption
@@ -101,6 +109,7 @@ def generate_visuals():
     })
     img_path = "visual.jpg"
     with open(img_path, 'wb') as f: f.write(requests.get(result['images'][0]['url']).content)
+    print("Visuals Generated successfully!")
     return img_path
 
 def clone_voice(text):
@@ -111,10 +120,11 @@ def clone_voice(text):
     })
     audio_path = "voice.wav"
     with open(audio_path, 'wb') as f: f.write(requests.get(result["audio_url"]).content)
+    print("Voice Cloned Successfully!")
     return audio_path
 
 def animate_and_edit(image, audio, script):
-    print("Animating Avatar & Burning Subtitles...")
+    print("Animating Avatar & Burning Subtitles (This takes 3-5 mins)...")
     res = fal_client.subscribe("fal-ai/sadtalker", arguments={
         "source_image_url": fal_client.upload_file(image),
         "driven_audio_url": fal_client.upload_file(audio), "still_mode": True
@@ -136,11 +146,14 @@ def animate_and_edit(image, audio, script):
         
     final_v = "Final_Reel.mp4"
     CompositeVideoClip([video] + subtitle_clips).write_videofile(final_v, fps=24, codec="libx264")
+    print("Video Animation Complete!")
     return final_v
 
 def publish(video, caption):
-    print("Automated Publishing to Meta Ecosystem...")
+    print("Automated Publishing to Meta Ecosystem... (Check Phone for Login Approvals)")
     cl = Client()
+    # Instagram login delay timeout
+    cl.request_timeout = 60 
     session_file = "ig_session.json"
     if os.path.exists(session_file):
         cl.load_settings(session_file)
