@@ -1,100 +1,126 @@
 import os, random, requests, datetime, subprocess, sys, builtins
-import pytz # IST logic ke liye
+import pytz 
 import fal_client
-from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip, ColorClip
+from moviepy.editor import *
 
 def print(*args, **kwargs):
     kwargs['flush'] = True
     builtins.print(*args, **kwargs)
 
-# 1. Identity & Secrets
+# --- SECRETS & DNA ---
 LORA_URL = "https://github.com/adityasingh860772-bit/vitt-wire-engine/releases/download/v1.0.0/T2Z3k6pzmg9oY6UFynuqx_pytorch_lora_weights.safetensors"
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 FAL_KEY = os.environ.get("FAL_KEY")
 
-# 15-DAY PROFESSIONAL WARDROBE
+# --- 15-DAY PROFESSIONAL WARDROBE ---
 WARDROBE = [
-    "sharp navy blue blazer, white formal shirt", "charcoal grey Nehru jacket",
-    "premium solid black polo", "sleek olive green crew neck",
-    "professional beige linen shirt", "royal blue shirt, silver tie",
-    "light grey blazer over black tee", "maroon shirt, folded sleeves",
-    "white shirt with black waistcoat", "dark forest green blazer",
-    "sky blue shirt, navy tie", "tan leather jacket, black turtleneck",
-    "classic black suit, white shirt", "grey textured blazer",
-    "off-white premium Nehru jacket"
+    "sharp navy blue blazer, white shirt", "charcoal grey Nehru jacket", "solid black polo", 
+    "olive green crew neck", "beige linen shirt", "royal blue shirt, silver tie", 
+    "light grey blazer, black tee", "maroon shirt, folded sleeves", "white shirt, black waistcoat", 
+    "dark forest green blazer", "sky blue shirt, navy tie", "tan leather jacket", 
+    "classic black suit", "grey textured blazer", "off-white Nehru jacket"
 ]
 
-CONSTANT_PROPS = "professional broadcast mic, laptop with screen glow, 'The Vitt Wire' coffee mug"
-RANDOM_PROPS = ["a sleek tablet", "a stack of financial files", "a smartphone face down"]
-POSITIONS = ["on the left", "in the foreground", "next to the mic"]
-
-def get_vitt_script():
-    print("Triggering Gemini 1.5 Flash (Stage-Ready Vocabulary)...")
-    ist = pytz.timezone('Asia/Kolkata')
-    now = datetime.datetime.now(ist)
-    edition = "Morning Briefing" if now.hour < 15 else "Evening Wrap-Up"
+def get_verified_script(hour):
+    print("--- Phase 1: Fetching LIVE Verified Global News ---")
+    edition = "Morning Briefing" if hour < 15 else "Evening Wrap-Up"
+    focus = "Global cues, verified pre-market international news, and opening predictions" if hour < 15 else "Day's official closing data, global market summary, and verified top gainers/losers"
     
-    # Emergency Fallback
-    fb_s = f"Namaste India! The Vitt Wire ke {edition} mein swagat hai. Global market volatility ke beech AI stocks naye highs par hain. Indian investors ko abhi cautious rehna chahiye. Stay tuned!"
-    fb_c = "#TheVittWire #FinanceNews #Investing #AI"
-
     try:
         from google import genai
+        from google.genai import types
         client = genai.Client(api_key=GEMINI_API_KEY)
-        prompt = f"Act as Financial Analyst Aditya Singh. Edition: {edition}. Tone: Professional, High-level Hinglish. 50 words. Format: SCRIPT: [text] CAPTION: [caption]"
-        res = client.models.generate_content(model='gemini-1.5-flash', contents=prompt)
+        
+        prompt = f"Act as Financial Analyst Aditya Singh for 'The Vitt Wire'. Edition: {edition}. Focus: {focus}. STRICT RULE: Search the web for today's real-time verified financial data and base your script on it. Use High-level Hinglish. Keep it crisp 50-60 words (30 seconds). Format: SCRIPT: [text] CAPTION: [caption with trending hashtags]"
+        
+        res = client.models.generate_content(
+            model='gemini-1.5-flash', 
+            contents=prompt,
+            config=types.GenerateContentConfig(tools=[{"google_search": {}}])
+        )
         raw = res.text.replace('*', '').strip()
-        s = raw.split("CAPTION:")[0].replace("SCRIPT:", "").strip()
-        c = raw.split("CAPTION:")[1].strip() if "CAPTION:" in raw else fb_c
-        return s, c
-    except:
-        return fb_s, fb_c
+        script = raw.split("CAPTION:")[0].replace("SCRIPT:", "").strip()
+        caption = raw.split("CAPTION:")[1].strip() if "CAPTION:" in raw else "#TheVittWire #FinanceNews"
+        return script, caption
+    except Exception as e:
+        print(f"Gemini Exception: {e}")
+        return "Namaste India! Market updates ke liye bane rahein The Vitt Wire par.", "#TheVittWire"
+
+def generate_aditya_voice(text):
+    print("--- Phase 3: Cloning Aditya's Voice (Zero Cost XTTS) ---")
+    if not os.path.exists("aditya_voice.wav"):
+        print("CRITICAL ERROR: 'aditya_voice.wav' NOT FOUND in Repo!")
+        sys.exit(1)
+    try:
+        from TTS.api import TTS
+        tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2", gpu=False)
+        tts.tts_to_file(text=text, file_path="v.wav", speaker_wav="aditya_voice.wav", language="hi")
+    except Exception as e:
+        print(f"CRITICAL ERROR in Voice generation: {e}")
+        sys.exit(1)
 
 def assembly_line():
-    script, caption = get_vitt_script()
     ist = pytz.timezone('Asia/Kolkata')
     now = datetime.datetime.now(ist)
+    script, caption = get_verified_script(now.hour)
     
-    # 15-Day Wardrobe & Random Props Logic
-    day_idx = now.toordinal() % 15
-    outfit = WARDROBE[day_idx]
-    prop = f"{random.choice(RANDOM_PROPS)} {random.choice(POSITIONS)}"
+    outfit = WARDROBE[now.toordinal() % 15]
+    prop = random.choice(["sleek tablet", "financial files", "smartphone face down"])
     
-    # 2. Flux Visual (Direct URL to Save Time)
-    print(f"Generating Visual (Day {day_idx+1}): {outfit}...")
-    img_prompt = f"Aditya Singh {outfit}, sitting in studio, {CONSTANT_PROPS}, {prop}, 8k photorealistic."
-    img_res = fal_client.subscribe("fal-ai/flux-lora", arguments={"prompt": img_prompt, "loras": [{"path": LORA_URL, "scale": 1.0}]})
+    print(f"--- Phase 2: Flux Visual Generation (Outfit: {outfit}) ---")
+    img_prompt = f"Aditya Singh wearing {outfit}, sitting in a professional news studio. He has thick hair volume, professionally styled hair. Cinematic lighting with subtle laptop screen glow on face, professional broadcast mic, branded coffee mug, {prop} on desk, 8k photorealistic."
     
-    # 3. Voice & SadTalker (Face Enhancer ON)
-    from gtts import gTTS
-    gTTS(script, lang='hi', tld='co.in').save("v.wav")
-    print("Animating Avatar (High-Quality Enhancer)...")
-    anim = fal_client.subscribe("fal-ai/sadtalker", arguments={
-        "source_image_url": img_res['images'][0]['url'],
-        "driven_audio_url": fal_client.upload_file("v.wav"),
-        "still_mode": True,
-        "preprocess": "full",
-        "enhancer": "gfpgan"
+    img_res = fal_client.subscribe("fal-ai/flux-lora", arguments={
+        "prompt": img_prompt, 
+        "image_size": "portrait_16_9", 
+        "loras": [{"path": LORA_URL, "scale": 1.0}]
     })
     
-    v_url = anim.get("video_url") or anim.get("url")
+    flux_url = img_res['images'][0]['url']
+    
+    generate_aditya_voice(script)
+    
+    print("--- Phase 4: Avatar Lip-Sync Animation ---")
+    anim = fal_client.subscribe("fal-ai/sadtalker", arguments={
+        "source_image_url": flux_url, "driven_audio_url": fal_client.upload_file("v.wav"),
+        "still_mode": True, "preprocess": "full", "enhancer": "gfpgan"
+    })
+    
+    v_url = None
+    if isinstance(anim, dict):
+        v_url = anim.get("video_url") or anim.get("url")
+        if not v_url and "video" in anim:
+            v_url = anim["video"].get("url") if isinstance(anim["video"], dict) else anim["video"]
+
+    if not v_url:
+        print("CRITICAL ERROR: Animation URL missing.")
+        sys.exit(1)
+
     with open("raw.mp4", 'wb') as f: f.write(requests.get(v_url).content)
 
-    # 4. Final Edit: Table Props & 5-word Subtitles
+    print("--- Phase 5: Post-Production (Instagram Safe Zones) ---")
     clip = VideoFileClip("raw.mp4")
-    bar = ColorClip(size=(clip.w, 160), color=(0,0,0)).set_opacity(0.7).set_duration(clip.duration).set_position(("center", "bottom"))
+    safe_zone_y = clip.h - 450 # Subtitles safe from IG UI
     
     words = script.split()
     chunks = [" ".join(words[i:i+5]) for i in range(0, len(words), 5)]
     dur = clip.duration / len(chunks)
-    subs = [TextClip(c, fontsize=40, color='yellow', font='DejaVu-Sans-Bold', method='caption', size=(clip.w*0.8, None)).set_start(i*dur).set_duration(dur).set_position(("center", "bottom")).margin(bottom=75) for i, c in enumerate(chunks)]
     
-    # Name Plate
-    name = TextClip("ADITYA SINGH | THE VITT WIRE", fontsize=25, color='white', font='DejaVu-Sans-Bold').set_duration(clip.duration).set_position((50, 50))
+    subs = [TextClip(c, fontsize=42, color='yellow', font='DejaVu-Sans-Bold', stroke_color='black', stroke_width=2, method='caption', size=(clip.w*0.8, None)).set_start(i*dur).set_duration(dur).set_position(("center", safe_zone_y + 20)) for i, c in enumerate(chunks)]
+    
+    bar = ColorClip(size=(clip.w, 180), color=(0,0,0)).set_opacity(0.6).set_duration(clip.duration).set_position(("center", safe_zone_y))
+    name = TextClip("ADITYA SINGH | THE VITT WIRE", fontsize=28, color='white', font='DejaVu-Sans-Bold').set_duration(clip.duration).set_position((50, 50))
+    logo = TextClip("LIVE 🔴", fontsize=25, color='red', font='DejaVu-Sans-Bold').set_duration(clip.duration).set_position((clip.w-150, 50))
 
-    final_v = "The_Vitt_Wire_Final.mp4"
-    CompositeVideoClip([clip, bar, name] + subs).write_videofile(final_v, fps=24, codec="libx264")
-    with open("meta.txt", "w") as f: f.write(f"{final_v}|{caption}")
+    final_clip = CompositeVideoClip([clip, bar, name, logo] + subs)
+    
+    if os.path.exists("bgm.mp3"):
+        bgm = AudioFileClip("bgm.mp3").volumex(0.12).set_duration(clip.duration)
+        final_clip = final_clip.set_audio(CompositeAudioClip([clip.audio, bgm]))
+
+    final_clip.write_videofile("The_Vitt_Wire_Final.mp4", fps=24, codec="libx264")
+    with open("meta.txt", "w") as f: f.write(f"The_Vitt_Wire_Final.mp4|{caption}")
+    print("Assembly Complete!")
 
 if __name__ == "__main__":
     assembly_line()
