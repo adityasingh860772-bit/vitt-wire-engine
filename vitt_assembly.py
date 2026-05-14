@@ -54,7 +54,9 @@ def generate_daily_script():
     ist_now = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
     edition = "Morning Briefing" if ist_now.hour < 15 else "Evening Wrap-Up"
     
+    # Model name updated to fix the 404 error
     model = genai.GenerativeModel('gemini-1.5-flash')
+    
     prompt = (
         f"Act as a Financial Analyst for 'The Vitt Wire'. Edition: {edition}. "
         "Focus: Latest Global Crypto/AI news and its IMPACT on the Indian Market/Investors. "
@@ -70,7 +72,7 @@ def generate_daily_script():
 
 def generate_visuals():
     print("Selecting Daily Outfit & Generating Avatar...")
-    # Logic: Aaj ki date ke basis par outfit select (Subah/Shaam same rahega)
+    # Logic: Subah/Shaam same look, har din badlega
     ist_now = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
     outfit_index = (ist_now.toordinal()) % 15 
     daily_outfit = WARDROBE[outfit_index]
@@ -107,7 +109,7 @@ def animate_and_edit(image, audio, script):
     with open(raw_video, 'wb') as f: f.write(requests.get(res["video_url"]).content)
     
     video = VideoFileClip(raw_video)
-    # Dynamic Viral Subtitles (5-word chunks)
+    # Dynamic Subtitles
     words = script.split()
     chunks = [" ".join(words[i:i+5]) for i in range(0, len(words), 5)]
     dur = video.duration / len(chunks)
@@ -126,7 +128,7 @@ def animate_and_edit(image, audio, script):
 def publish(video, caption):
     print("Automated Publishing to Meta Ecosystem...")
     cl = Client()
-    # Safe Session Handling
+    # Handle Instagram Session
     session_file = "ig_session.json"
     if os.path.exists(session_file):
         cl.load_settings(session_file)
