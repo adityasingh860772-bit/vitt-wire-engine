@@ -1,9 +1,9 @@
 name: Vitt Wire Daily Broadcast
 
 on:
-  workflow_dispatch: # Allows manual trigger
+  workflow_dispatch:
   schedule:
-    - cron: '30 3 * * *' # Runs at 9:00 AM IST daily (3:30 AM UTC)
+    - cron: '30 3 * * *' # 9:00 AM IST
 
 jobs:
   generate_and_post:
@@ -15,11 +15,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python_version: '3.9'
+          python-version: '3.9'
 
-      - name: Install Dependencies
+      - name: Install Critical Dependencies
         run: |
-          pip install moviepy
+          python -m pip install --upgrade pip
+          pip install moviepy==1.0.3 proglog==0.1.9
 
       - name: Run Production Engine
         run: |
