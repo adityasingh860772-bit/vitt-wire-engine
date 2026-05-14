@@ -7,7 +7,6 @@ def print(*args, **kwargs):
     kwargs['flush'] = True
     builtins.print(*args, **kwargs)
 
-# --- THE MASTERMIND FIX: Auto-Accept Coqui TTS License ---
 os.environ["COQUI_TOS_AGREED"] = "1"
 
 # --- SECRETS & DNA ---
@@ -15,7 +14,6 @@ LORA_URL = "https://github.com/adityasingh860772-bit/vitt-wire-engine/releases/d
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 FAL_KEY = os.environ.get("FAL_KEY")
 
-# --- 15-DAY PROFESSIONAL WARDROBE ---
 WARDROBE = [
     "sharp navy blue blazer, white formal shirt", "charcoal grey Nehru jacket", "premium solid black polo", 
     "sleek olive green crew neck", "professional beige linen shirt", "royal blue shirt, silver tie", 
@@ -34,11 +32,11 @@ def get_verified_script(hour):
         from google.genai import types
         client = genai.Client(api_key=GEMINI_API_KEY)
         
-        prompt = f"Act as Financial Analyst Aditya Singh for 'The Vitt Wire'. Edition: {edition}. Focus: {focus}. STRICT RULE: Search the web for today's real-time verified financial data and base your script on it. Use High-level Hinglish. Keep it crisp 55 words. Format: SCRIPT: [text] CAPTION: [caption with hashtags]"
+        prompt = f"Act as Financial Analyst Aditya Singh for 'The Vitt Wire'. Edition: {edition}. Focus: {focus}. Base script on REAL-TIME VERIFIED GOOGLE SEARCH results from today. High-level Hinglish. Keep it crisp 55 words. Format: SCRIPT: [text] CAPTION: [caption with hashtags]"
         
-        # FIX: Updated model name for latest search capability
+        # FIX: Reverted to standard model name for better SDK compatibility
         res = client.models.generate_content(
-            model='gemini-1.5-flash-latest', 
+            model='gemini-1.5-flash', 
             contents=prompt,
             config=types.GenerateContentConfig(tools=[types.Tool(google_search_retrieval=types.GoogleSearchRetrieval())])
         )
@@ -54,7 +52,7 @@ def get_verified_script(hour):
 def generate_aditya_voice(text):
     print("--- Phase 3: XTTS-v2 Voice Cloning (Using aditya_voice.wav) ---")
     if not os.path.exists("aditya_voice.wav"):
-        print("ERROR: 'aditya_voice.wav' NOT FOUND in Repo!")
+        print("ERROR: aditya_voice.wav NOT FOUND!")
         sys.exit(1)
     try:
         from TTS.api import TTS
@@ -72,7 +70,7 @@ def assembly_line():
     outfit = WARDROBE[now.toordinal() % 15]
     prop = random.choice(["sleek tablet", "financial files", "smartphone"])
     
-    print(f"--- Phase 2: Flux Visual Generation (Hair Volume & Studio Glow) ---")
+    print(f"--- Phase 2: Flux Visual Generation ---")
     img_prompt = f"Aditya Singh wearing {outfit}, sitting in a financial studio. He has thick hair volume, professional stylish groomed hair. Cinematic lighting, subtle laptop screen glow on face, broadcast mic, branded coffee mug, {prop} on desk, 8k photorealistic."
     
     img_res = fal_client.subscribe("fal-ai/flux-lora", arguments={"prompt": img_prompt, "image_size": "portrait_16_9", "loras": [{"path": LORA_URL, "scale": 1.0}]})
@@ -80,7 +78,7 @@ def assembly_line():
     
     generate_aditya_voice(script)
     
-    print("--- Phase 4: Avatar Lip-Sync Animation ---")
+    print("--- Phase 4: Avatar Lip-Sync ---")
     anim = fal_client.subscribe("fal-ai/sadtalker", arguments={
         "source_image_url": flux_url, "driven_audio_url": fal_client.upload_file("v.wav"),
         "still_mode": True, "preprocess": "full", "enhancer": "gfpgan"
@@ -88,9 +86,9 @@ def assembly_line():
     v_url = anim.get("video_url") or anim.get("url") or anim["video"]["url"]
     with open("raw.mp4", 'wb') as f: f.write(requests.get(v_url).content)
 
-    print("--- Phase 5: Safe-Zone Editing & BGM ---")
+    print("--- Phase 5: Post-Production ---")
     clip = VideoFileClip("raw.mp4")
-    safe_zone_y = clip.h - 450 # Subtitles safe from IG UI
+    safe_zone_y = clip.h - 450
     
     words = script.split()
     chunks = [" ".join(words[i:i+5]) for i in range(0, len(words), 5)]
@@ -109,12 +107,11 @@ def assembly_line():
         bgm = AudioFileClip("bgm.mp3").volumex(0.12).set_duration(clip.duration)
         final_audio = CompositeAudioClip([clip.audio, bgm])
 
-    final_audio = final_audio.audio_fadeout(0.5) # Smooth Loop Fix
+    final_audio = final_audio.audio_fadeout(0.5)
     final_clip = final_clip.set_audio(final_audio)
 
     final_clip.write_videofile("The_Vitt_Wire_Final.mp4", fps=24, codec="libx264")
     with open("meta.txt", "w") as f: f.write(f"The_Vitt_Wire_Final.mp4|{caption}")
-    print("Assembly Complete!")
 
 if __name__ == "__main__":
     assembly_line()
