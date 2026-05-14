@@ -21,7 +21,7 @@ IG_PASSWORD = os.environ.get("IG_PASSWORD")
 genai.configure(api_key=GEMINI_API_KEY)
 
 # ==========================================
-# 2. THE 15-DAY NO-REPEAT WARDROBE (Summer Friendly)
+# 2. THE 15-DAY NO-REPEAT WARDROBE
 # ==========================================
 WARDROBE = [
     "wearing a sharp navy blue blazer over a crisp white formal shirt",
@@ -54,12 +54,12 @@ def generate_daily_script():
     ist_now = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
     edition = "Morning Briefing" if ist_now.hour < 15 else "Evening Wrap-Up"
     
-    # Model name updated to fix the 404 error
+    # FIXED: Standard model name without 'models/' prefix
     model = genai.GenerativeModel('gemini-1.5-flash')
     
     prompt = (
         f"Act as a Financial Analyst for 'The Vitt Wire'. Edition: {edition}. "
-        "Focus: Latest Global Crypto/AI news and its IMPACT on the Indian Market/Investors. "
+        "Focus: Latest Global Crypto/AI news and its IMPACT on the Indian Market/Investors."
         "Tone: Energetic, Professional, Hinglish. MANDATORY: Script exactly 50-60 words. "
         "Format: SCRIPT: [text] CAPTION: [caption with hashtags]"
     )
@@ -72,7 +72,6 @@ def generate_daily_script():
 
 def generate_visuals():
     print("Selecting Daily Outfit & Generating Avatar...")
-    # Logic: Subah/Shaam same look, har din badlega
     ist_now = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
     outfit_index = (ist_now.toordinal()) % 15 
     daily_outfit = WARDROBE[outfit_index]
@@ -109,7 +108,6 @@ def animate_and_edit(image, audio, script):
     with open(raw_video, 'wb') as f: f.write(requests.get(res["video_url"]).content)
     
     video = VideoFileClip(raw_video)
-    # Dynamic Subtitles
     words = script.split()
     chunks = [" ".join(words[i:i+5]) for i in range(0, len(words), 5)]
     dur = video.duration / len(chunks)
@@ -128,7 +126,6 @@ def animate_and_edit(image, audio, script):
 def publish(video, caption):
     print("Automated Publishing to Meta Ecosystem...")
     cl = Client()
-    # Handle Instagram Session
     session_file = "ig_session.json"
     if os.path.exists(session_file):
         cl.load_settings(session_file)
