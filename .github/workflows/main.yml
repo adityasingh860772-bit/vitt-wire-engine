@@ -35,7 +35,6 @@ jobs:
       - name: Install Python Libraries
         run: |
           python -m pip install --upgrade pip setuptools wheel
-          # FIX: Forced setuptools for pkg_resources and stable torch/transformers
           pip install setuptools==69.5.1
           pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cpu
           pip install transformers==4.36.2
