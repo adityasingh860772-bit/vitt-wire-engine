@@ -29,7 +29,7 @@ def clean_tts_script(text):
     return clean_text
 
 def get_verified_script(hour):
-    print("--- Phase 1: Generating Script (Fresh API Key - 1.5 Flash Mode) ---")
+    print("--- Phase 1: Generating Script (Fresh API Key + 1.5 Flash) ---")
     edition = "Morning Briefing" if hour < 15 else "Evening Wrap-Up"
     focus = "Indian market updates, global cues, and standard market trends" if hour < 15 else "Market closing summary, top sector performance"
     
@@ -50,7 +50,7 @@ def get_verified_script(hour):
     
     for attempt in range(3):
         try:
-            # UPGRADED to gemini-1.5-flash since we have a fresh key with full quota
+            # Using the fast and smart 1.5-flash model since we have a fresh API Key
             model = genai.GenerativeModel('gemini-1.5-flash')
             res = model.generate_content(prompt)
             raw = res.text.replace('*', '').strip()
@@ -98,7 +98,7 @@ def assembly_line():
     
     print(f"--- Phase 2: Flux Visual Generation (Locked Master Setup) ---")
     
-    # MASTERMIND FIX: Aggressive prompting for Eye Contact, Desk Props, and Studio Match
+    # 10 QC POINTS FIXED HERE: Eye contact, Props, Studio Lighting
     img_prompt = f"Frontal portrait view, looking directly into the camera lens with absolute direct eye contact. A highly realistic, cinematic shot of Aditya Singh wearing {outfit}, with neat professional hair. He is seated behind a premium news anchor desk in a modern studio. FIXED DESK SETUP: An open modern laptop (MacBook) on the desk, a professional Shure SM7B broadcast microphone on a stand right in front of him, and a black coffee mug with a white logo. The background features blurred studio shelves with warm, layered linear lighting, books, and a Bird of Paradise plant. Bright cinematic broadcast lighting, extremely sharp focus on his face, 8k photorealistic, professional TV news anchor aesthetic."
     
     img_res = fal_client.subscribe("fal-ai/flux-lora", arguments={"prompt": img_prompt, "image_size": "portrait_16_9", "loras": [{"path": LORA_URL, "scale": 1.0}]})
@@ -107,7 +107,7 @@ def assembly_line():
     generate_aditya_voice(tts_script)
     
     print("--- Phase 4: Avatar Lip-Sync Animation ---")
-    # MASTERMIND FIX: still_mode False allows natural body and head movements
+    # NATURAL MOVEMENT FIX: still_mode False allows head and body to move naturally
     anim = fal_client.subscribe("fal-ai/sadtalker", arguments={
         "source_image_url": flux_url, "driven_audio_url": fal_client.upload_file("v.wav"),
         "still_mode": False, 
