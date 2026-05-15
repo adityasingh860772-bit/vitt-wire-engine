@@ -38,7 +38,8 @@ jobs:
           pip install setuptools==69.5.1
           pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cpu
           pip install transformers==4.36.2
-          pip install requests fal-client moviepy==1.0.3 google-genai pytz 
+          # MASTERMIND FIX: Using the classic, stable Google Generative AI SDK
+          pip install requests fal-client moviepy==1.0.3 google-generativeai pytz 
           pip install TTS
 
       - name: Run Assembly
