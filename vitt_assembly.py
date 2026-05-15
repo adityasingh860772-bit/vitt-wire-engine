@@ -24,12 +24,9 @@ WARDROBE = [
 ]
 
 def get_verified_script(hour):
-    print("--- Phase 1: Generating Dual-Layer Script ---")
+    print("--- Phase 1: Generating Dual-Layer Script (Direct API Mode) ---")
     edition = "Morning Briefing" if hour < 15 else "Evening Wrap-Up"
     focus = "Indian market updates, global cues, and standard market trends" if hour < 15 else "Market closing summary, top sector performance"
-    
-    from google import genai
-    client = genai.Client(api_key=GEMINI_API_KEY)
     
     prompt = f"""Act as Financial Analyst Aditya Singh for 'The Vitt Wire'. Edition: {edition}. Focus: {focus}.
     STRICT RULES:
@@ -44,14 +41,22 @@ def get_verified_script(hour):
     SUB_SCRIPT: [Roman Hinglish text]
     CAPTION: [caption with hashtags]"""
     
+    # MASTERMIND FIX: Bypassing the buggy SDK. Using Direct REST API.
+    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    payload = {"contents": [{"parts": [{"text": prompt}]}]}
+    
     for attempt in range(3):
         try:
-            res = client.models.generate_content(
-                model='gemini-1.5-flash', 
-                contents=prompt
-            )
-            # MASTERMIND FIX 3: Stripping markdown before regex to prevent pattern crash
-            raw = res.text.replace('*', '').strip()
+            resp = requests.post(api_url, json=payload)
+            if resp.status_code != 200:
+                print(f"API Error Code {resp.status_code}: {resp.text}")
+                time.sleep(5)
+                continue
+                
+            res_json = resp.json()
+            raw = res_json['candidates'][0]['content']['parts'][0]['text']
+            
+            raw = raw.replace('*', '').strip()
             
             tts_match = re.search(r'TTS_SCRIPT\s*:\s*(.*?)(?=SUB_SCRIPT\s*:)', raw, re.DOTALL | re.IGNORECASE)
             sub_match = re.search(r'SUB_SCRIPT\s*:\s*(.*?)(?=CAPTION\s*:)', raw, re.DOTALL | re.IGNORECASE)
@@ -66,7 +71,7 @@ def get_verified_script(hour):
                     return tts_text, sub_text, cap_text
             print(f"Attempt {attempt+1} regex parsing failed. Retrying...")
         except Exception as e:
-            print(f"Gemini Attempt {attempt+1} Failed: {e}.")
+            print(f"Direct API Attempt {attempt+1} Failed: {e}")
             time.sleep(5)
             
     print("CRITICAL ERROR: Failed to generate properly formatted script after 3 attempts.")
@@ -124,7 +129,6 @@ def assembly_line():
     chunks = [" ".join(words[i:i+5]) for i in range(0, len(words), 5)]
     dur = clip.duration / len(chunks)
     
-    # MASTERMIND FIX 2: Added int() wrapper to clip width to prevent ImageMagick crash
     subs = [TextClip(c, fontsize=42, color='yellow', font='DejaVu-Sans-Bold', stroke_color='black', stroke_width=2, method='caption', size=(int(clip.w*0.8), None)).set_start(i*dur).set_duration(dur).set_position(("center", safe_zone_y + 20)) for i, c in enumerate(chunks)]
     
     bar = ColorClip(size=(clip.w, 180), color=(0,0,0)).set_opacity(0.6).set_duration(clip.duration).set_position(("center", safe_zone_y))
@@ -138,7 +142,6 @@ def assembly_line():
         bgm = AudioFileClip("bgm.mp3").fx(afx.audio_loop, duration=clip.duration).volumex(0.12)
         final_audio = CompositeAudioClip([clip.audio, bgm])
 
-    # MASTERMIND FIX 1: Replaced incorrect audio_fadeout method with the correct MoviePy FX effect
     final_audio = final_audio.fx(afx.audio_fadeout, 0.5) 
     final_clip = final_clip.set_audio(final_audio)
 
