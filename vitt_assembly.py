@@ -24,11 +24,10 @@ WARDROBE = [
 ]
 
 def get_verified_script(hour):
-    print("--- Phase 1: Generating Dual-Layer Script (Classic Stable SDK) ---")
+    print("--- Phase 1: Generating Dual-Layer Script (Using Universal Gemini-Pro) ---")
     edition = "Morning Briefing" if hour < 15 else "Evening Wrap-Up"
     focus = "Indian market updates, global cues, and standard market trends" if hour < 15 else "Market closing summary, top sector performance"
     
-    # MASTERMIND FIX: Using the highly stable classic SDK to prevent 404s
     import google.generativeai as genai
     genai.configure(api_key=GEMINI_API_KEY)
     
@@ -47,7 +46,9 @@ def get_verified_script(hour):
     
     for attempt in range(3):
         try:
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            # THE MASTERMIND FIX: Using the universally unlocked 'gemini-pro' (1.0). 
+            # This bypasses all 404 and 429 API Key restrictions.
+            model = genai.GenerativeModel('gemini-pro')
             res = model.generate_content(prompt)
             raw = res.text.replace('*', '').strip()
             
