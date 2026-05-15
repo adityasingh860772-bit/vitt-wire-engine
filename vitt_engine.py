@@ -10,7 +10,6 @@ def upload_to_bridge(video_file):
             res = requests.post("https://tmpfiles.org/api/v1/upload", files={"file": f}).json()
             
         original_url = res['data']['url']
-        # Convert to direct download link required by Meta Graph API
         direct_url = original_url.replace("tmpfiles.org/", "tmpfiles.org/dl/")
         return direct_url
     except Exception as e:
@@ -25,6 +24,7 @@ def start_engine(video_file, caption):
         return
     
     print(f"Meta Fetch Link: {public_url}")
+    print(f"Caption to post: {caption}")
     
     url = f"https://graph.facebook.com/v22.0/{IG_USER_ID}/media"
     payload = {'media_type': 'REELS', 'video_url': public_url, 'caption': caption, 'access_token': ACCESS_TOKEN}
@@ -40,7 +40,7 @@ def start_engine(video_file, caption):
     status_url = f"https://graph.facebook.com/v22.0/{c_id}"
     params = {'fields': 'status_code', 'access_token': ACCESS_TOKEN}
     
-    for attempt in range(20): # Polling for up to 10 minutes
+    for attempt in range(20): 
         check = requests.get(status_url, params=params).json()
         status = check.get('status_code')
         print(f"Current Status: {status}")
@@ -67,8 +67,11 @@ def start_engine(video_file, caption):
 
 if __name__ == "__main__":
     if os.path.exists("meta.txt"):
-        with open("meta.txt", "r") as f:
-            content = f.read().split("|")
-            if len(content) == 2:
-                v, c = content
+        # MASTERMIND FIX: Safe reading with utf-8
+        with open("meta.txt", "r", encoding="utf-8") as f:
+            data = f.read()
+            if "|" in data:
+                parts = data.split("|", 1) # Splits only on the first pipe
+                v = parts[0]
+                c = parts[1]
                 start_engine(v, c)
