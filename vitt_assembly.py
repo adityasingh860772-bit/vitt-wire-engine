@@ -12,7 +12,7 @@ os.environ["COQUI_TOS_AGREED"] = "1"
 
 # --- SECRETS & REPO LINKS ---
 LORA_URL = "https://github.com/adityasingh860772-bit/vitt-wire-engine/releases/download/v1.0.0/T2Z3k6pzmg9oY6UFynuqx_pytorch_lora_weights.safetensors"
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 FAL_KEY = os.environ.get("FAL_KEY")
 
 WARDROBE = [
@@ -24,17 +24,16 @@ WARDROBE = [
 ]
 
 def clean_tts_script(text):
-    # MASTERMIND FIX: Removing symbols to make voice natural and prevent reading punctuation
     clean_text = text.replace('!', '।').replace('?', '।').replace('-', ' ').replace('*', '')
     return clean_text
 
 def get_verified_script(hour):
-    print("--- Phase 1: Generating Script (Universal Gemini-Pro Engine) ---")
+    print("--- Phase 1: Generating Script (Groq / Llama-3 Engine) ---")
     edition = "Morning Briefing" if hour < 15 else "Evening Wrap-Up"
     focus = "Indian market updates, global cues, and standard market trends" if hour < 15 else "Market closing summary, top sector performance"
     
-    import google.generativeai as genai
-    genai.configure(api_key=GEMINI_API_KEY)
+    from groq import Groq
+    client = Groq(api_key=GROQ_API_KEY)
     
     prompt = f"""Act as Financial Analyst Aditya Singh for 'The Vitt Wire'. Edition: {edition}. Focus: {focus}.
     STRICT RULES:
@@ -50,10 +49,14 @@ def get_verified_script(hour):
     
     for attempt in range(3):
         try:
-            # THE ULTIMATE FIX: Using gemini-pro (1.0). It never 404s on a fresh key.
-            model = genai.GenerativeModel('gemini-pro')
-            res = model.generate_content(prompt)
-            raw = res.text.replace('*', '').strip()
+            # THE PIVOT: Using Meta's Llama-3 via Groq for instant, fail-proof generation
+            completion = client.chat.completions.create(
+                model="llama3-70b-8192",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+                max_tokens=500
+            )
+            raw = completion.choices[0].message.content.replace('*', '').strip()
             
             tts_match = re.search(r'TTS_SCRIPT\s*:\s*(.*?)(?=SUB_SCRIPT\s*:)', raw, re.DOTALL | re.IGNORECASE)
             sub_match = re.search(r'SUB_SCRIPT\s*:\s*(.*?)(?=CAPTION\s*:)', raw, re.DOTALL | re.IGNORECASE)
@@ -70,10 +73,10 @@ def get_verified_script(hour):
                     return tts_text, sub_text, cap_text
             print(f"Attempt {attempt+1} regex parsing failed. Retrying...")
         except Exception as e:
-            print(f"Gemini Attempt {attempt+1} Failed: {e}.")
+            print(f"Groq Attempt {attempt+1} Failed: {e}.")
             time.sleep(5)
             
-    print("CRITICAL ERROR: Failed to generate properly formatted script after 3 attempts.")
+    print("CRITICAL ERROR: Failed to generate script via Groq after 3 attempts.")
     sys.exit(1)
 
 def generate_aditya_voice(text):
@@ -98,7 +101,6 @@ def assembly_line():
     
     print(f"--- Phase 2: Flux Visual Generation (Locked Master Setup) ---")
     
-    # 10 QC POINTS FIXED HERE: Eye contact, Props, Studio Lighting
     img_prompt = f"Frontal portrait view, looking directly into the camera lens with absolute direct eye contact. A highly realistic, cinematic shot of Aditya Singh wearing {outfit}, with neat professional hair. He is seated behind a premium news anchor desk in a modern studio. FIXED DESK SETUP: An open modern laptop (MacBook) on the desk, a professional Shure SM7B broadcast microphone on a stand right in front of him, and a black coffee mug with a white logo. The background features blurred studio shelves with warm, layered linear lighting, books, and a Bird of Paradise plant. Bright cinematic broadcast lighting, extremely sharp focus on his face, 8k photorealistic, professional TV news anchor aesthetic."
     
     img_res = fal_client.subscribe("fal-ai/flux-lora", arguments={"prompt": img_prompt, "image_size": "portrait_16_9", "loras": [{"path": LORA_URL, "scale": 1.0}]})
@@ -107,7 +109,6 @@ def assembly_line():
     generate_aditya_voice(tts_script)
     
     print("--- Phase 4: Avatar Lip-Sync Animation ---")
-    # NATURAL MOVEMENT FIX: still_mode False allows head and body to move naturally
     anim = fal_client.subscribe("fal-ai/sadtalker", arguments={
         "source_image_url": flux_url, "driven_audio_url": fal_client.upload_file("v.wav"),
         "still_mode": False, 
