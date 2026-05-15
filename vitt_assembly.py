@@ -29,7 +29,7 @@ def clean_tts_script(text):
     return clean_text
 
 def get_verified_script(hour):
-    print("--- Phase 1: Generating Script (Fresh API Key + 1.5 Flash) ---")
+    print("--- Phase 1: Generating Script (Universal Gemini-Pro Engine) ---")
     edition = "Morning Briefing" if hour < 15 else "Evening Wrap-Up"
     focus = "Indian market updates, global cues, and standard market trends" if hour < 15 else "Market closing summary, top sector performance"
     
@@ -50,8 +50,8 @@ def get_verified_script(hour):
     
     for attempt in range(3):
         try:
-            # Using the fast and smart 1.5-flash model since we have a fresh API Key
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            # THE ULTIMATE FIX: Using gemini-pro (1.0). It never 404s on a fresh key.
+            model = genai.GenerativeModel('gemini-pro')
             res = model.generate_content(prompt)
             raw = res.text.replace('*', '').strip()
             
