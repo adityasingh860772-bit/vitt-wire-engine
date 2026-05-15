@@ -38,13 +38,13 @@ jobs:
           pip install setuptools==69.5.1
           pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cpu
           pip install transformers==4.36.2
-          # MASTERMIND FIX: Using the classic, stable Google Generative AI SDK
-          pip install requests fal-client moviepy==1.0.3 google-generativeai pytz 
+          # MASTERMIND PIVOT: Installed Groq library instead of Gemini
+          pip install requests fal-client moviepy==1.0.3 groq pytz 
           pip install TTS
 
       - name: Run Assembly
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           FAL_KEY: ${{ secrets.FAL_KEY }}
         run: python vitt_assembly.py
 
