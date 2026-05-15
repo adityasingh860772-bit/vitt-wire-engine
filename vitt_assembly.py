@@ -28,7 +28,7 @@ def clean_tts_script(text):
     return clean_text
 
 def get_verified_script(hour):
-    print("--- Phase 1: Generating Script (Groq / Llama-3 Engine) ---")
+    print("--- Phase 1: Generating Script (Groq / Llama-3.1 Engine) ---")
     edition = "Morning Briefing" if hour < 15 else "Evening Wrap-Up"
     focus = "Indian market updates, global cues, and standard market trends" if hour < 15 else "Market closing summary, top sector performance"
     
@@ -49,9 +49,9 @@ def get_verified_script(hour):
     
     for attempt in range(3):
         try:
-            # THE PIVOT: Using Meta's Llama-3 via Groq for instant, fail-proof generation
+            # THE FIX: Updated to the currently active Llama 3.1 model on Groq
             completion = client.chat.completions.create(
-                model="llama3-70b-8192",
+                model="llama-3.1-70b-versatile",
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.7,
                 max_tokens=500
