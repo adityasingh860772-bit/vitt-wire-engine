@@ -29,7 +29,7 @@ def clean_tts_script(text):
     return clean_text
 
 def get_verified_script(hour):
-    print("--- Phase 1: Generating Script (Fresh API Key Mode) ---")
+    print("--- Phase 1: Generating Script (Fresh API Key - 1.5 Flash Mode) ---")
     edition = "Morning Briefing" if hour < 15 else "Evening Wrap-Up"
     focus = "Indian market updates, global cues, and standard market trends" if hour < 15 else "Market closing summary, top sector performance"
     
@@ -50,7 +50,8 @@ def get_verified_script(hour):
     
     for attempt in range(3):
         try:
-            model = genai.GenerativeModel('gemini-pro')
+            # UPGRADED to gemini-1.5-flash since we have a fresh key with full quota
+            model = genai.GenerativeModel('gemini-1.5-flash')
             res = model.generate_content(prompt)
             raw = res.text.replace('*', '').strip()
             
