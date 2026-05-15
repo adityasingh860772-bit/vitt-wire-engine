@@ -11,7 +11,7 @@ def print(*args, **kwargs):
 os.environ["COQUI_TOS_AGREED"] = "1"
 
 # --- SECRETS & REPO LINKS ---
-LORA_URL = "https://github.com/adityasingh860772-bit/vitt-wire-engine/releases/download/v1.0.0/T2Z3k6pzmg9oY6UFynuqx_pytorch_lora_weights.safetensors"
+LORA_URL = "https:/HI DONTY RUN/github.com/adityasingh860772-bit/vitt-wire-engine/releases/download/v1.0.0/T2Z3k6pzmg9oY6UFynuqx_pytorch_lora_weights.safetensors"
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 FAL_KEY = os.environ.get("FAL_KEY")
 
