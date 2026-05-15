@@ -24,9 +24,12 @@ WARDROBE = [
 ]
 
 def get_verified_script(hour):
-    print("--- Phase 1: Generating Dual-Layer Script (Direct API Mode) ---")
+    print("--- Phase 1: Generating Dual-Layer Script (Gemini 2.0 Engine) ---")
     edition = "Morning Briefing" if hour < 15 else "Evening Wrap-Up"
     focus = "Indian market updates, global cues, and standard market trends" if hour < 15 else "Market closing summary, top sector performance"
+    
+    from google import genai
+    client = genai.Client(api_key=GEMINI_API_KEY)
     
     prompt = f"""Act as Financial Analyst Aditya Singh for 'The Vitt Wire'. Edition: {edition}. Focus: {focus}.
     STRICT RULES:
@@ -41,22 +44,14 @@ def get_verified_script(hour):
     SUB_SCRIPT: [Roman Hinglish text]
     CAPTION: [caption with hashtags]"""
     
-    # MASTERMIND FIX: Bypassing the buggy SDK. Using Direct REST API.
-    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-    payload = {"contents": [{"parts": [{"text": prompt}]}]}
-    
     for attempt in range(3):
         try:
-            resp = requests.post(api_url, json=payload)
-            if resp.status_code != 200:
-                print(f"API Error Code {resp.status_code}: {resp.text}")
-                time.sleep(5)
-                continue
-                
-            res_json = resp.json()
-            raw = res_json['candidates'][0]['content']['parts'][0]['text']
-            
-            raw = raw.replace('*', '').strip()
+            # THE MASTERMIND FIX: Upgraded to 'gemini-2.0-flash'. The old 1.5 model is dead.
+            res = client.models.generate_content(
+                model='gemini-2.0-flash', 
+                contents=prompt
+            )
+            raw = res.text.replace('*', '').strip()
             
             tts_match = re.search(r'TTS_SCRIPT\s*:\s*(.*?)(?=SUB_SCRIPT\s*:)', raw, re.DOTALL | re.IGNORECASE)
             sub_match = re.search(r'SUB_SCRIPT\s*:\s*(.*?)(?=CAPTION\s*:)', raw, re.DOTALL | re.IGNORECASE)
@@ -71,7 +66,7 @@ def get_verified_script(hour):
                     return tts_text, sub_text, cap_text
             print(f"Attempt {attempt+1} regex parsing failed. Retrying...")
         except Exception as e:
-            print(f"Direct API Attempt {attempt+1} Failed: {e}")
+            print(f"Gemini Attempt {attempt+1} Failed: {e}.")
             time.sleep(5)
             
     print("CRITICAL ERROR: Failed to generate properly formatted script after 3 attempts.")
