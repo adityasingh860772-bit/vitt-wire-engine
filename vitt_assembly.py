@@ -2,6 +2,7 @@ import os, random, requests, datetime, sys, builtins, time, re
 import pytz 
 import fal_client
 from moviepy.editor import *
+import moviepy.audio.fx.all as afx
 
 def print(*args, **kwargs):
     kwargs['flush'] = True
@@ -23,44 +24,52 @@ WARDROBE = [
 ]
 
 def get_verified_script(hour):
-    print("--- Phase 1: Fetching LIVE Verified Global News ---")
+    print("--- Phase 1: Generating Dual-Layer Script ---")
     edition = "Morning Briefing" if hour < 15 else "Evening Wrap-Up"
-    focus = "Pre-market opening, global cues, verified indices" if hour < 15 else "Closing market data, top gainers/losers, global wrap"
+    focus = "Indian market updates, global cues, and standard market trends" if hour < 15 else "Market closing summary, top sector performance"
     
     from google import genai
-    from google.genai import types
     client = genai.Client(api_key=GEMINI_API_KEY)
     
     prompt = f"""Act as Financial Analyst Aditya Singh for 'The Vitt Wire'. Edition: {edition}. Focus: {focus}.
     STRICT RULES:
-    1. Search the web for today's REAL-TIME verified financial data. No generic advice.
-    2. Write the SCRIPT entirely in Devanagari (Hindi) characters (e.g., मार्केट आज गैप-अप हुआ). Do NOT use Roman English for the script.
-    3. Do NOT include any markdown, asterisks, or citation numbers like [1] or [2] in the script.
-    4. Keep it exactly 55-60 words for a 30-second video.
-    Format: SCRIPT: [Devanagari text] CAPTION: [caption with hashtags]"""
+    1. You must provide the script in TWO formats.
+    2. TTS_SCRIPT must be entirely in Devanagari characters.
+    3. SUB_SCRIPT must be the exact same script but written in Roman English/Hinglish.
+    4. Keep the script exactly 55-60 words for a 30-second video.
+    5. Do NOT use asterisks (*) or markdown.
+    
+    FORMAT EXACTLY LIKE THIS:
+    TTS_SCRIPT: [Devanagari text]
+    SUB_SCRIPT: [Roman Hinglish text]
+    CAPTION: [caption with hashtags]"""
     
     for attempt in range(3):
         try:
             res = client.models.generate_content(
                 model='gemini-1.5-flash', 
-                contents=prompt,
-                config=types.GenerateContentConfig(tools=[types.Tool(google_search_retrieval=types.GoogleSearchRetrieval())])
+                contents=prompt
             )
-            
+            # MASTERMIND FIX 3: Stripping markdown before regex to prevent pattern crash
             raw = res.text.replace('*', '').strip()
-            raw = re.sub(r'\[\d+\]', '', raw) 
             
-            # Caption fallback mechanism
-            script_part = raw.split("CAPTION:")[0].replace("SCRIPT:", "").strip()
-            caption_part = raw.split("CAPTION:")[1].strip() if "CAPTION:" in raw else "#TheVittWire #FinanceNews #StockMarketIndia"
+            tts_match = re.search(r'TTS_SCRIPT\s*:\s*(.*?)(?=SUB_SCRIPT\s*:)', raw, re.DOTALL | re.IGNORECASE)
+            sub_match = re.search(r'SUB_SCRIPT\s*:\s*(.*?)(?=CAPTION\s*:)', raw, re.DOTALL | re.IGNORECASE)
+            cap_match = re.search(r'CAPTION\s*:\s*(.*)', raw, re.DOTALL | re.IGNORECASE)
             
-            if len(script_part) > 30: 
-                return script_part, caption_part
+            if tts_match and sub_match:
+                tts_text = tts_match.group(1).replace('\n', ' ').strip()
+                sub_text = sub_match.group(1).replace('\n', ' ').strip()
+                cap_text = cap_match.group(1).strip() if cap_match else "#TheVittWire #FinanceNews #StockMarketIndia"
+                
+                if len(tts_text) > 30 and len(sub_text) > 30:
+                    return tts_text, sub_text, cap_text
+            print(f"Attempt {attempt+1} regex parsing failed. Retrying...")
         except Exception as e:
-            print(f"Gemini Attempt {attempt+1} Failed: {e}. Retrying in 5 seconds...")
+            print(f"Gemini Attempt {attempt+1} Failed: {e}.")
             time.sleep(5)
             
-    print("CRITICAL ERROR: Failed to fetch verified news after 3 attempts.")
+    print("CRITICAL ERROR: Failed to generate properly formatted script after 3 attempts.")
     sys.exit(1)
 
 def generate_aditya_voice(text):
@@ -79,13 +88,12 @@ def generate_aditya_voice(text):
 def assembly_line():
     ist = pytz.timezone('Asia/Kolkata')
     now = datetime.datetime.now(ist)
-    script, caption = get_verified_script(now.hour)
     
+    tts_script, sub_script, caption = get_verified_script(now.hour)
     outfit = WARDROBE[now.toordinal() % 15]
     dynamic_prop = random.choice(["closed leather notebook", "stack of financial files", "smartphone", "leather tablet"])
     
     print(f"--- Phase 2: Flux Visual Generation (Locked Studio Setup) ---")
-    
     if now.hour >= 8 and now.hour < 11:
         time_light_prompt = "bright, crisp, natural daylight streaming in from a window to his left, creating clean highlights."
     elif now.hour >= 17 and now.hour < 19:
@@ -98,7 +106,7 @@ def assembly_line():
     img_res = fal_client.subscribe("fal-ai/flux-lora", arguments={"prompt": img_prompt, "image_size": "portrait_16_9", "loras": [{"path": LORA_URL, "scale": 1.0}]})
     flux_url = img_res['images'][0]['url']
     
-    generate_aditya_voice(script)
+    generate_aditya_voice(tts_script)
     
     print("--- Phase 4: Avatar Lip-Sync Animation ---")
     anim = fal_client.subscribe("fal-ai/sadtalker", arguments={
@@ -112,11 +120,12 @@ def assembly_line():
     clip = VideoFileClip("raw.mp4")
     safe_zone_y = clip.h - 450 
     
-    words = script.split()
+    words = sub_script.split()
     chunks = [" ".join(words[i:i+5]) for i in range(0, len(words), 5)]
     dur = clip.duration / len(chunks)
     
-    subs = [TextClip(c, fontsize=42, color='yellow', font='DejaVu-Sans-Bold', stroke_color='black', stroke_width=2, method='caption', size=(clip.w*0.8, None)).set_start(i*dur).set_duration(dur).set_position(("center", safe_zone_y + 20)) for i, c in enumerate(chunks)]
+    # MASTERMIND FIX 2: Added int() wrapper to clip width to prevent ImageMagick crash
+    subs = [TextClip(c, fontsize=42, color='yellow', font='DejaVu-Sans-Bold', stroke_color='black', stroke_width=2, method='caption', size=(int(clip.w*0.8), None)).set_start(i*dur).set_duration(dur).set_position(("center", safe_zone_y + 20)) for i, c in enumerate(chunks)]
     
     bar = ColorClip(size=(clip.w, 180), color=(0,0,0)).set_opacity(0.6).set_duration(clip.duration).set_position(("center", safe_zone_y))
     name = TextClip("ADITYA SINGH | THE VITT WIRE", fontsize=28, color='white', font='DejaVu-Sans-Bold').set_duration(clip.duration).set_position((50, 50))
@@ -126,15 +135,15 @@ def assembly_line():
     
     final_audio = clip.audio
     if os.path.exists("bgm.mp3"):
-        bgm = AudioFileClip("bgm.mp3").volumex(0.12).set_duration(clip.duration)
+        bgm = AudioFileClip("bgm.mp3").fx(afx.audio_loop, duration=clip.duration).volumex(0.12)
         final_audio = CompositeAudioClip([clip.audio, bgm])
 
-    final_audio = final_audio.audio_fadeout(0.5) 
+    # MASTERMIND FIX 1: Replaced incorrect audio_fadeout method with the correct MoviePy FX effect
+    final_audio = final_audio.fx(afx.audio_fadeout, 0.5) 
     final_clip = final_clip.set_audio(final_audio)
 
     final_clip.write_videofile("The_Vitt_Wire_Final.mp4", fps=24, codec="libx264")
     
-    # MASTERMIND FIX: Added utf-8 encoding to prevent crash with Hindi emojis/hashtags
     with open("meta.txt", "w", encoding="utf-8") as f: 
         f.write(f"The_Vitt_Wire_Final.mp4|{caption}")
     print("Assembly Complete!")
