@@ -24,12 +24,13 @@ WARDROBE = [
 ]
 
 def get_verified_script(hour):
-    print("--- Phase 1: Generating Dual-Layer Script (Gemini 2.0 Engine) ---")
+    print("--- Phase 1: Generating Dual-Layer Script (Classic Stable SDK) ---")
     edition = "Morning Briefing" if hour < 15 else "Evening Wrap-Up"
     focus = "Indian market updates, global cues, and standard market trends" if hour < 15 else "Market closing summary, top sector performance"
     
-    from google import genai
-    client = genai.Client(api_key=GEMINI_API_KEY)
+    # MASTERMIND FIX: Using the highly stable classic SDK to prevent 404s
+    import google.generativeai as genai
+    genai.configure(api_key=GEMINI_API_KEY)
     
     prompt = f"""Act as Financial Analyst Aditya Singh for 'The Vitt Wire'. Edition: {edition}. Focus: {focus}.
     STRICT RULES:
@@ -46,11 +47,8 @@ def get_verified_script(hour):
     
     for attempt in range(3):
         try:
-            # THE MASTERMIND FIX: Upgraded to 'gemini-2.0-flash'. The old 1.5 model is dead.
-            res = client.models.generate_content(
-                model='gemini-2.0-flash', 
-                contents=prompt
-            )
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            res = model.generate_content(prompt)
             raw = res.text.replace('*', '').strip()
             
             tts_match = re.search(r'TTS_SCRIPT\s*:\s*(.*?)(?=SUB_SCRIPT\s*:)', raw, re.DOTALL | re.IGNORECASE)
