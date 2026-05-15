@@ -1,4 +1,4 @@
-import os, random, requests, datetime, sys, builtins, time
+import os, random, requests, datetime, sys, builtins, time, re
 import pytz 
 import fal_client
 from moviepy.editor import *
@@ -12,6 +12,7 @@ os.environ["COQUI_TOS_AGREED"] = "1"
 
 # --- SECRETS & REPO LINKS ---
 LORA_URL = "https://github.com/adityasingh860772-bit/vitt-wire-engine/releases/download/v1.0.0/T2Z3k6pzmg9oY6UFynuqx_pytorch_lora_weights.safetensors"
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 FAL_KEY = os.environ.get("FAL_KEY")
 
 WARDROBE = [
@@ -22,17 +23,57 @@ WARDROBE = [
     "classic black suit, white shirt", "grey textured blazer", "off-white premium Nehru jacket"
 ]
 
-def get_verified_script():
-    print("--- Phase 1: Gemini API Bypassed. Using Mastermind's Hardcoded Script ---")
+def clean_tts_script(text):
+    # MASTERMIND FIX: Removing symbols to make voice natural and prevent reading punctuation
+    clean_text = text.replace('!', '।').replace('?', '।').replace('-', ' ').replace('*', '')
+    return clean_text
+
+def get_verified_script(hour):
+    print("--- Phase 1: Generating Script (Fresh API Key Mode) ---")
+    edition = "Morning Briefing" if hour < 15 else "Evening Wrap-Up"
+    focus = "Indian market updates, global cues, and standard market trends" if hour < 15 else "Market closing summary, top sector performance"
     
-    # THE FIX: Directly supplying the dual-layer script. API Key completely ignored.
-    tts_text = "नमस्कार! द विट वायर में आपका स्वागत है। आज भारतीय शेयर बाजार में भारी उछाल देखा गया। बैंकिंग और आईटी सेक्टर में सबसे ज्यादा खरीदारी रही। ग्लोबल मार्केट से भी पॉजिटिव संकेत मिल रहे हैं। कल के मार्केट ओपनिंग पर नजर बनाए रखें।"
+    import google.generativeai as genai
+    genai.configure(api_key=GEMINI_API_KEY)
     
-    sub_text = "Namaskar! The Vitt Wire mein aapka swagat hai. Aaj Indian stock market mein bhari uchhaal dekha gaya. Banking aur IT sector mein sabse zyada buying rahi. Global market se bhi positive signals mil rahe hain. Kal ki market opening par nazar banaye rakhein."
+    prompt = f"""Act as Financial Analyst Aditya Singh for 'The Vitt Wire'. Edition: {edition}. Focus: {focus}.
+    STRICT RULES:
+    1. You must provide the script in TWO formats.
+    2. TTS_SCRIPT must be entirely in Devanagari characters. NO EXCLAMATION MARKS.
+    3. SUB_SCRIPT must be the exact same script but written in Roman English/Hinglish.
+    4. Keep the script exactly 55-60 words for a 30-second video.
     
-    cap_text = "Indian Market hits new highs! 🚀 Banking and IT sectors lead the rally. Stay tuned for tomorrow's opening bell. #TheVittWire #StockMarketIndia #Sensex #Nifty50"
+    FORMAT EXACTLY LIKE THIS:
+    TTS_SCRIPT: [Devanagari text]
+    SUB_SCRIPT: [Roman Hinglish text]
+    CAPTION: [caption with hashtags]"""
     
-    return tts_text, sub_text, cap_text
+    for attempt in range(3):
+        try:
+            model = genai.GenerativeModel('gemini-pro')
+            res = model.generate_content(prompt)
+            raw = res.text.replace('*', '').strip()
+            
+            tts_match = re.search(r'TTS_SCRIPT\s*:\s*(.*?)(?=SUB_SCRIPT\s*:)', raw, re.DOTALL | re.IGNORECASE)
+            sub_match = re.search(r'SUB_SCRIPT\s*:\s*(.*?)(?=CAPTION\s*:)', raw, re.DOTALL | re.IGNORECASE)
+            cap_match = re.search(r'CAPTION\s*:\s*(.*)', raw, re.DOTALL | re.IGNORECASE)
+            
+            if tts_match and sub_match:
+                tts_text = tts_match.group(1).replace('\n', ' ').strip()
+                sub_text = sub_match.group(1).replace('\n', ' ').strip()
+                cap_text = cap_match.group(1).strip() if cap_match else "#TheVittWire #FinanceNews"
+                
+                tts_text = clean_tts_script(tts_text)
+                
+                if len(tts_text) > 30 and len(sub_text) > 30:
+                    return tts_text, sub_text, cap_text
+            print(f"Attempt {attempt+1} regex parsing failed. Retrying...")
+        except Exception as e:
+            print(f"Gemini Attempt {attempt+1} Failed: {e}.")
+            time.sleep(5)
+            
+    print("CRITICAL ERROR: Failed to generate properly formatted script after 3 attempts.")
+    sys.exit(1)
 
 def generate_aditya_voice(text):
     print("--- Phase 3: XTTS-v2 Voice Cloning ---")
@@ -51,19 +92,13 @@ def assembly_line():
     ist = pytz.timezone('Asia/Kolkata')
     now = datetime.datetime.now(ist)
     
-    tts_script, sub_script, caption = get_verified_script()
+    tts_script, sub_script, caption = get_verified_script(now.hour)
     outfit = WARDROBE[now.toordinal() % 15]
-    dynamic_prop = random.choice(["closed leather notebook", "stack of financial files", "smartphone", "leather tablet"])
     
-    print(f"--- Phase 2: Flux Visual Generation (Locked Studio Setup) ---")
-    if now.hour >= 8 and now.hour < 11:
-        time_light_prompt = "bright, crisp, natural daylight streaming in from a window to his left, creating clean highlights."
-    elif now.hour >= 17 and now.hour < 19:
-        time_light_prompt = "warm, golden, atmospheric light from the large tripod lamp behind him and a desk lamp, creating an intimate, focused newsdesk feel."
-    else:
-        time_light_prompt = "cinematic, sophisticated studio lighting."
-
-    img_prompt = f"A close-up, cinematic shot of Aditya Singh, wearing {outfit}, with neat professional hair style. He is seated at a sophisticated desk, featuring a fixed setup: a professional Shure SM7B-style broadcast microphone on a stand, a stylish black coffee mug, a leather office chair, and wearing an Apple Watch. The background shelves with warm, layered linear lighting, books, plants, and the large Bird of Paradise plant remain constant. The dynamic lighting is {time_light_prompt} On the desk, in front of him, there is a {dynamic_prop}. Depth of field, professional TV news anchor quality, 8k photorealistic."
+    print(f"--- Phase 2: Flux Visual Generation (Locked Master Setup) ---")
+    
+    # MASTERMIND FIX: Aggressive prompting for Eye Contact, Desk Props, and Studio Match
+    img_prompt = f"Frontal portrait view, looking directly into the camera lens with absolute direct eye contact. A highly realistic, cinematic shot of Aditya Singh wearing {outfit}, with neat professional hair. He is seated behind a premium news anchor desk in a modern studio. FIXED DESK SETUP: An open modern laptop (MacBook) on the desk, a professional Shure SM7B broadcast microphone on a stand right in front of him, and a black coffee mug with a white logo. The background features blurred studio shelves with warm, layered linear lighting, books, and a Bird of Paradise plant. Bright cinematic broadcast lighting, extremely sharp focus on his face, 8k photorealistic, professional TV news anchor aesthetic."
     
     img_res = fal_client.subscribe("fal-ai/flux-lora", arguments={"prompt": img_prompt, "image_size": "portrait_16_9", "loras": [{"path": LORA_URL, "scale": 1.0}]})
     flux_url = img_res['images'][0]['url']
@@ -71,9 +106,12 @@ def assembly_line():
     generate_aditya_voice(tts_script)
     
     print("--- Phase 4: Avatar Lip-Sync Animation ---")
+    # MASTERMIND FIX: still_mode False allows natural body and head movements
     anim = fal_client.subscribe("fal-ai/sadtalker", arguments={
         "source_image_url": flux_url, "driven_audio_url": fal_client.upload_file("v.wav"),
-        "still_mode": True, "preprocess": "full", "enhancer": "gfpgan"
+        "still_mode": False, 
+        "preprocess": "full", 
+        "enhancer": "gfpgan"
     })
     v_url = anim.get("video_url") or anim.get("url") or anim["video"]["url"]
     with open("raw.mp4", 'wb') as f: f.write(requests.get(v_url).content)
